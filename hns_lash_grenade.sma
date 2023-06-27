@@ -26,7 +26,7 @@ public rgRoundStart() {
 }
 
 public rgPlayerKilled(victim, attacker) {
-	if (rg_get_user_team(victim) != TEAM_TERRORIST || g_bLastFlash)
+	if (is_deathmatch() || rg_get_user_team(victim) != TEAM_TERRORIST || g_bLastFlash)
 			return HC_CONTINUE;
 
 	new iPlayers[MAX_PLAYERS], iNum;

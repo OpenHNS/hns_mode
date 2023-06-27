@@ -5,12 +5,8 @@
 
 #define rg_get_user_team(%0) get_member(%0, m_iTeam)
 
-enum HNS_MODE {
-	hns_public = 0,
-	hns_deathmatch
-}
 
-new HNS_MODE:g_eHnsMode;
+new bool:g_isDeathMatch;
 
 enum HNS_CVAR {
 	c_iDeathMatch,
@@ -106,7 +102,7 @@ public plugin_precache() {
 public plugin_natives() {
 	register_native("hns_get_prefix", "native_get_prefix");
 	
-	register_native("hns_get_mode", "native_get_mode");
+	register_native("is_deathmatch", "native_is_deathmatch");
 	register_native("hns_set_mode", "native_set_mode");
 }
 
@@ -117,14 +113,14 @@ public native_get_prefix(amxx, params) {
 	set_string(arg_prefix, g_pCvar[c_szPrefix], get_param(arg_len));
 }
 
-public HNS_MODE:native_get_mode(amxx, params) {
-	return g_eHnsMode;
+public native_is_deathmatch(amxx, params) {
+	return g_isDeathMatch;
 }
 
 public native_set_mode(amxx, params) {
-	enum { mode = 0 };
+	enum { bool:isDM = false };
 
-	hns_set_mode(HNS_MODE:get_param(mode));
+	hns_set_mode(isDM);
 }
 
 public delayed_mode() {
@@ -135,9 +131,9 @@ public delayed_mode() {
 	set_cvar_string("sv_alltalk", "1");
 
 	if (g_pCvar[c_iDeathMatch]) {
-		hns_set_mode(hns_deathmatch);
+		hns_set_mode(true);
 	} else {
-		hns_set_mode(hns_public);
+		hns_set_mode(false);
 	}
 }
 
@@ -162,14 +158,14 @@ public rgPlayerResetMaxSpeed(id) {
 public rgPlayerSpawn(id) {
 	setUserRole(id);
 
-	if (g_eHnsMode == hns_deathmatch)
+	if (g_isDeathMatch)
 		checkBalanceTeams();
 }
 
 public checkBalanceTeams() {
 	new iPlayers[MAX_PLAYERS], iCTNum, iTTNum
-	get_players(iPlayers, iCTNum, "che", "CT");
-	get_players(iPlayers, iTTNum, "che", "TERRORIST");
+	get_players(iPlayers, iCTNum, "he", "CT");
+	get_players(iPlayers, iTTNum, "he", "TERRORIST");
 
 	if (abs(iCTNum - iTTNum) < 2)
 		return PLUGIN_HANDLED;
@@ -177,15 +173,14 @@ public checkBalanceTeams() {
 	if (iCTNum > iTTNum) {
 		new iPlayer = getRandomAlivePlayer(TEAM_CT);
 		if (iPlayer) {
-			rg_set_user_team(iPlayer, TEAM_CT);
+			rg_set_user_team(iPlayer, TEAM_TERRORIST);
 			setUserRole(iPlayer);
-
 			client_print_color(0, print_team_blue, "%L", 0, "MAIN_TRANSFER_CT", g_pCvar[c_szPrefix], iPlayer);
 		}
 	} else {
 		new iPlayer = getRandomAlivePlayer(TEAM_TERRORIST);
 		if (iPlayer) {
-			rg_set_user_team(iPlayer, TEAM_TERRORIST);
+			rg_set_user_team(iPlayer, TEAM_CT);
 			setUserRole(iPlayer);
 
 			client_print_color(0, print_team_blue, "%L", 0, "MAIN_TRANSFER_TT", g_pCvar[c_szPrefix], iPlayer);
@@ -196,7 +191,7 @@ public checkBalanceTeams() {
 }
 
 public rgPlayerKilled(victim, attacker) {
-	if (g_eHnsMode == hns_deathmatch)
+	if (!g_isDeathMatch)
 		return HC_CONTINUE;
 
 	if (attacker == 0 || !is_user_connected(attacker)) {
@@ -332,7 +327,7 @@ public fwdEmitSound(id, iChannel, szSample[], Float:volume, Float:attenuation, f
 }
 
 public fwdClientKill(id) {
-	if (g_eHnsMode == hns_deathmatch) {
+	if (g_isDeathMatch) {
 		client_print_color(id, print_team_blue, "%L", id, "MAIN_KILL_NOT", g_pCvar[c_szPrefix]);
 		return FMRES_SUPERCEDE;
 	} else if (rg_get_remaining_time() > 60.0) {
@@ -398,26 +393,24 @@ stock Float:rg_get_remaining_time() {
     return (float(get_member_game(m_iRoundTimeSecs)) - get_gametime() + Float:get_member_game(m_fRoundStartTimeReal));
 }
 
-public hns_set_mode(HNS_MODE:eMode) {
-	g_eHnsMode = eMode;
+public hns_set_mode(isDM) {
+	g_isDeathMatch = isDM ? true : false;
 
-	switch (eMode) {
-		case hns_public: {
-			set_cvar_string("mp_freezetime", "0");
-			set_cvar_string("mp_roundtime", "0");
-			set_cvar_string("mp_roundrespawn_time", "-1");
-			set_cvar_string("mp_round_infinite", "1");
+	if (isDM) {
+		set_cvar_string("mp_freezetime", "0");
+		set_cvar_string("mp_roundtime", "0");
+		set_cvar_string("mp_roundrespawn_time", "-1");
+		set_cvar_string("mp_round_infinite", "1");
 		
-			set_pcvar_num(g_pCvar[c_iDeathMatch], 0);
-		}
-		case hns_deathmatch: {
-			set_cvar_string("mp_freezetime", "5");
-			set_cvar_string("mp_roundtime", "2.5");
-			set_cvar_string("mp_roundrespawn_time", "20");
-			set_cvar_string("mp_round_infinite", "0");
+		set_cvar_string("hns_deathmatch", "1"); // Переделать
+	} else {
+		set_cvar_string("mp_freezetime", "5");
+		set_cvar_string("mp_roundtime", "2.5");
+		set_cvar_string("mp_roundrespawn_time", "20");
+		set_cvar_string("mp_round_infinite", "0");
 
-			set_pcvar_num(g_pCvar[c_iDeathMatch], 1);
-		}
+	
+		set_cvar_string("hns_deathmatch", "0"); // Переделать
 	}
 
 	set_cvar_string("sv_restart", "1");
@@ -428,13 +421,13 @@ stock getRandomAlivePlayer(TeamName:iTeam) {
 
 	switch (iTeam) {
 		case TEAM_TERRORIST: {
-			get_players(iPlayers, iNum, "ache", "TERRORIST");
+			get_players(iPlayers, iNum, "ahe", "TERRORIST");
 		}
 		case TEAM_CT: {
-			get_players(iPlayers, iNum, "ache", "CT");
+			get_players(iPlayers, iNum, "ahe", "CT");
 		}
 		case TEAM_SPECTATOR: {
-			get_players(iPlayers, iNum, "ache", "SPECTATOR");
+			get_players(iPlayers, iNum, "ahe", "SPECTATOR");
 		}
 	}
 

@@ -37,7 +37,10 @@ Hide'N'Seek - For the most part a catch-up game. The CT team catches up with the
 
 ## Plugins
 
-- hns_main.sma - Main plugin of the mod
+- hns_main.sma - The main plugin of the mod.
+- hns_hideknife.sma - Allows you to hide the knife.
+- hns_specback.sma - Goes behind observers and back (/spec /back).
+- hns_lash_grenade.sma - The last living terrorist gives grenades.
 
 ## installation
  

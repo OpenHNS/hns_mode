@@ -9,11 +9,9 @@ enum HNS_MODE {
 	hns_deathmatch
 }
 
-new HNS_MODE:g_eHnsMode;
-
 native hns_get_prefix(prefix[], len);
 
-native HNS_MODE:native_get_mode();
+native bool:is_deathmatch();
 native hns_set_mode(HNS_MODE:eMode);
 
 forward hns_team_swap();

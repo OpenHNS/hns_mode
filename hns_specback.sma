@@ -33,6 +33,7 @@ public SpecBack(id) {
 			g_bSpec[id] = false;
 			return;
 		}
+
 		g_iTeam[id] = rg_get_user_team(id);
 		TransferToSpec(id);
 	} else {
@@ -40,7 +41,12 @@ public SpecBack(id) {
 			g_bSpec[id] = true;
 			return;
 		}
+
 		rg_set_user_team(id, g_iTeam[id]);
+
+		if (is_deathmatch()) {
+			rg_round_respawn(id);
+		}
 	}
 }
 
