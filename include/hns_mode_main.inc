@@ -13,3 +13,5 @@ new HNS_MODE:g_eHnsMode;
 
 native HNS_MODE:native_get_mode();
 native hns_set_mode(HNS_MODE:eMode);
+
+forward hns_team_swap();

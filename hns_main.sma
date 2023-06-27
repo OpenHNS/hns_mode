@@ -42,8 +42,14 @@ new const g_szDefaultEntities[][] = {
 	"monster_scentist"
 }
 
+enum _: Forwards_s {
+	hns_team_swap
+};
+
+new g_hForwards[Forwards_s];
+
 public plugin_init() {
-	register_plugin("HNS Mode Main", "1.0.0", "OpenHNS");
+	register_plugin("HNS Mode Main", "1.0.1", "OpenHNS");
 
 	register_clcmd("chooseteam", "BlockCmd");
 	register_clcmd("jointeam", "BlockCmd");
@@ -77,6 +83,8 @@ public plugin_init() {
 	set_msg_block(get_user_msgid("Money"), BLOCK_SET)
 
 	set_task(0.5, "delayed_mode");
+
+	g_hForwards[hns_team_swap] = CreateMultiForward("hns_team_swap", ET_CONTINUE);
 }
 
 public plugin_precache() {
@@ -247,6 +255,7 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 
 	if (status == WINSTATUS_CTS) {
 		rg_swap_all_players();
+		ExecuteForward(g_hForwards[hns_team_swap], _, 0);
 		iWinsTT = 0;
 	} else if (status == WINSTATUS_TERRORISTS) {
 		new iPlayers[MAX_PLAYERS], iCTNum, iTTNum
@@ -261,6 +270,7 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 		if (iWinsTT >= g_pCvar[c_iSwapTeams]) {
 			client_print_color(0, print_team_blue, "[^3%s^1] Команда TT Выйграла %d раунда! Автоматический свап.", g_pCvar[c_szPrefix], g_pCvar[c_iSwapTeams]);
 			rg_swap_all_players();
+			ExecuteForward(g_hForwards[hns_team_swap], _, 0);
 			iWinsTT = 0;
 		}
 	}
