@@ -85,6 +85,8 @@ public plugin_init() {
 	set_task(0.5, "delayed_mode");
 
 	g_hForwards[hns_team_swap] = CreateMultiForward("hns_team_swap", ET_CONTINUE);
+
+	register_dictionary("hidenseek.txt");
 }
 
 public plugin_precache() {
@@ -102,8 +104,17 @@ public plugin_precache() {
 }
 
 public plugin_natives() {
+	register_native("hns_get_prefix", "native_get_prefix");
+	
 	register_native("hns_get_mode", "native_get_mode");
 	register_native("hns_set_mode", "native_set_mode");
+}
+
+public native_get_prefix(amxx, params) {
+	enum {
+		arg_prefix = 1, arg_len
+	};
+	set_string(arg_prefix, g_pCvar[c_szPrefix], get_param(arg_len));
 }
 
 public HNS_MODE:native_get_mode(amxx, params) {
@@ -169,7 +180,7 @@ public checkBalanceTeams() {
 			rg_set_user_team(iPlayer, TEAM_CT);
 			setUserRole(iPlayer);
 
-			client_print_color(0, print_team_blue, "[^3%s^1] %n перенесли за ^3КТ^1.", g_pCvar[c_szPrefix], iPlayer);
+			client_print_color(0, print_team_blue, "%L", 0, "MAIN_TRANSFER_CT", g_pCvar[c_szPrefix], iPlayer);
 		}
 	} else {
 		new iPlayer = getRandomAlivePlayer(TEAM_TERRORIST);
@@ -177,7 +188,7 @@ public checkBalanceTeams() {
 			rg_set_user_team(iPlayer, TEAM_TERRORIST);
 			setUserRole(iPlayer);
 
-			client_print_color(0, print_team_blue, "[^3%s^1] %n перенесли за ^3Террористов^1.", g_pCvar[c_szPrefix], iPlayer);
+			client_print_color(0, print_team_blue, "%L", 0, "MAIN_TRANSFER_TT", g_pCvar[c_szPrefix], iPlayer);
 		}
 	}
 
@@ -193,7 +204,7 @@ public rgPlayerKilled(victim, attacker) {
 			new iLucky = getRandomAlivePlayer(TEAM_CT);
 			if (iLucky) {
 				rg_set_user_team(iLucky, TEAM_TERRORIST);
-				client_print_color(0, print_team_blue, "[^3%s^1] %n перенесли за ^3Террористов^1.", g_pCvar[c_szPrefix], iLucky)
+				client_print_color(0, print_team_blue, "%L", 0, "MAIN_TRANSFER_TT", g_pCvar[c_szPrefix], iLucky)
 				rg_set_user_team(victim, TEAM_CT);
 				setUserRole(iLucky);
 			}
@@ -268,7 +279,7 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 
 	if (g_pCvar[c_iSwapTeams]) {
 		if (iWinsTT >= g_pCvar[c_iSwapTeams]) {
-			client_print_color(0, print_team_blue, "[^3%s^1] Команда TT Выйграла %d раунда! Автоматический свап.", g_pCvar[c_szPrefix], g_pCvar[c_iSwapTeams]);
+			client_print_color(0, print_team_blue, "%L", 0, "MAIN_SWAP", g_pCvar[c_szPrefix], g_pCvar[c_iSwapTeams]);
 			rg_swap_all_players();
 			ExecuteForward(g_hForwards[hns_team_swap], _, 0);
 			iWinsTT = 0;
@@ -310,7 +321,7 @@ public fwdEmitSound(id, iChannel, szSample[], Float:volume, Float:attenuation, f
 			emit_sound(id, iChannel, g_szUseSound, volume, attenuation, fFlags, pitch);
 		} else {
 			emit_sound(id, iChannel, g_szUseSwist, volume, attenuation, fFlags, pitch);
-			client_print_color(0, print_team_blue, "[^3%s^1] %n свистнул.", g_pCvar[c_szPrefix], id);
+			client_print_color(0, print_team_blue, "%L", 0, "MAIN_SWIST", g_pCvar[c_szPrefix], id);
 			flNextTime[id] = get_gametime() + 20.0;
 		}
 
@@ -322,13 +333,13 @@ public fwdEmitSound(id, iChannel, szSample[], Float:volume, Float:attenuation, f
 
 public fwdClientKill(id) {
 	if (g_eHnsMode == hns_deathmatch) {
-		client_print_color(id, print_team_blue, "[^3%s^1] Не доступно для режима ДМ.", g_pCvar[c_szPrefix]);
+		client_print_color(id, print_team_blue, "%L", id, "MAIN_KILL_NOT", g_pCvar[c_szPrefix]);
 		return FMRES_SUPERCEDE;
 	} else if (rg_get_remaining_time() > 60.0) {
-		client_print_color(id, print_team_blue, "[^3%s^1] Не доступно в начале раунда.", g_pCvar[c_szPrefix]);
+		client_print_color(id, print_team_blue, "%L", id, "MAIN_KILL_WAIT", g_pCvar[c_szPrefix]);
 		return FMRES_SUPERCEDE;
 	} else {
-		client_print_color(0, print_team_blue, "[^3%s^1] ^3%n^1 убил сам себя.", g_pCvar[c_szPrefix], id);
+		client_print_color(0, print_team_blue, "%L", 0, "MAIN_KILL", g_pCvar[c_szPrefix], id);
 	}
 	return FMRES_IGNORED;
 }

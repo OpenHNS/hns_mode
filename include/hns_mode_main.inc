@@ -11,6 +11,8 @@ enum HNS_MODE {
 
 new HNS_MODE:g_eHnsMode;
 
+native hns_get_prefix(prefix[], len);
+
 native HNS_MODE:native_get_mode();
 native hns_set_mode(HNS_MODE:eMode);
 

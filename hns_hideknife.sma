@@ -13,28 +13,26 @@ public plugin_init() {
 	register_clcmd("say_team /knife", "commandHideKnife");
 
 	RegisterHam(Ham_Item_Deploy, "weapon_knife", "knifeDeploy", 1);
+
+	register_dictionary("hidenseek.txt");
 }
 
 public commandHideKnife(id) {
-	new menu = menu_create("Hide knife", "hideknifeHandler");
+	new szMsg[64];
+	new szMsgYesNo[16];
 
-	menu_additem(
-		menu,
-		fmt(
-			"Hide for \yTE \r%s",
-			g_playerHideKnife[id][TEAM_TERRORIST] ? "YES" : "NO"
-		)
-	);
+	formatex(szMsg, charsmax(szMsg), "%L", LANG_PLAYER, "KNIFE_HIDE");
+	new hMenu = menu_create(szMsg, "hideknifeHandler");
 
-	menu_additem(
-		menu,
-		fmt(
-			"Hide for \yCT \r%s",
-			g_playerHideKnife[id][TEAM_CT] ? "YES" : "NO"
-		)
-	);
+	formatex(szMsgYesNo, charsmax(szMsgYesNo), "%L", LANG_PLAYER, g_playerHideKnife[id][TEAM_TERRORIST] ? "HNS_YES" : "HNS_NO");
+	formatex(szMsg, charsmax(szMsg), "%L", LANG_PLAYER, "KNIFE_TT", szMsgYesNo);
+	menu_additem(hMenu, szMsg);
 
-	menu_display(id, menu);
+	formatex(szMsgYesNo, charsmax(szMsgYesNo), "%L", LANG_PLAYER, g_playerHideKnife[id][TEAM_CT] ? "HNS_YES" : "HNS_NO");
+	formatex(szMsg, charsmax(szMsg), "%L", LANG_PLAYER, "KNIFE_CT", szMsgYesNo);
+	menu_additem(hMenu, szMsg);
+
+	menu_display(id, hMenu);
 
 	return PLUGIN_HANDLED;
 }

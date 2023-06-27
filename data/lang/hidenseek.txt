@@ -1,0 +1,20 @@
+"%L", id, ""
+"%L", 0, ""
+
+MAIN_TRANSFER_TT = [^3%s^1] %n перенесли за ^3КТ^1.
+MAIN_TRANSFER_CT = [^3%s^1] %n перенесли за ^3Террористов^1.
+MAIN_SWAP = [^3%s^1] Команда TT Выйграла %d раунда! Автоматический свап.
+MAIN_SWIST = [^3%s^1] %n свистнул.
+MAIN_KILL_NOT = [^3%s^1] Не доступно для режима ДМ.
+MAIN_KILL_WAIT = [^3%s^1] Не доступно в начале раунда.
+MAIN_KILL = [^3%s^1] ^3%n^1 убил сам себя.
+
+LAST_NEED = \rНужны гранаты?
+LAST_SET = [^3%s^1] ^3%n^1 Взял последние гранаты.
+
+KNIFE_HIDE = Hide knife
+KNIFE_CT = Hide for \yCT \r%s
+KNIFE_TT = Hide for \yTT \r%s
+
+HNS_YES = Да
+HNS_NO = Нет
