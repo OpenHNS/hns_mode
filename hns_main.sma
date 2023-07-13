@@ -5,7 +5,6 @@
 
 #define rg_get_user_team(%0) get_member(%0, m_iTeam)
 
-
 new bool:g_isDeathMatch;
 
 enum HNS_CVAR {
@@ -45,7 +44,7 @@ enum _: Forwards_s {
 new g_hForwards[Forwards_s];
 
 public plugin_init() {
-	register_plugin("HNS Mode Main", "1.0.1", "OpenHNS");
+	register_plugin("HNS Mode Main", "1.0.2", "OpenHNS");
 
 	register_clcmd("chooseteam", "BlockCmd");
 	register_clcmd("jointeam", "BlockCmd");
@@ -60,6 +59,7 @@ public plugin_init() {
 	bind_pcvar_num(register_cvar("hns_swist",  "1"),		g_pCvar[c_iSwist]);
 	bind_pcvar_string(register_cvar("hns_prefix", "HNS"),	g_pCvar[c_szPrefix], charsmax(g_pCvar[c_szPrefix]));
 
+	RegisterHookChain(RG_CSGameRules_OnRoundFreezeEnd, "rgFreezeEnd", true);
 	RegisterHookChain(RG_CSGameRules_RestartRound, "rgRoundStart", true);
 	RegisterHookChain(RG_CBasePlayer_ResetMaxSpeed, "rgPlayerResetMaxSpeed", true);
 	RegisterHookChain(RG_CBasePlayer_Spawn, "rgPlayerSpawn", true);
@@ -75,8 +75,10 @@ public plugin_init() {
 
 	unregister_forward(FM_Spawn, g_iRegisterSpawn, 1);
 
-	set_msg_block(get_user_msgid("HudTextArgs"), BLOCK_SET)
-	set_msg_block(get_user_msgid("Money"), BLOCK_SET)
+	//set_msg_block(get_user_msgid("SendAudio"), BLOCK_SET);
+	set_msg_block(get_user_msgid("TextMsg"), BLOCK_SET);
+	set_msg_block(get_user_msgid("HudTextArgs"), BLOCK_SET);
+	set_msg_block(get_user_msgid("Money"), BLOCK_SET);
 
 	set_task(0.5, "delayed_mode");
 
@@ -139,6 +141,11 @@ public delayed_mode() {
 
 public BlockCmd(id) {
 	return PLUGIN_HANDLED;
+}
+
+public rgFreezeEnd() {
+	set_dhudmessage(0, 250, 0, -1.0, 0.2, .holdtime = 4.0);
+  	show_dhudmessage(0, "%L", LANG_PLAYER, "MAIN_FREEZE_END");
 }
 
 public rgRoundStart() {
@@ -261,8 +268,11 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 
 	if (status == WINSTATUS_CTS) {
 		rg_swap_all_players();
-		ExecuteForward(g_hForwards[hns_team_swap], _, 0);
+		ExecuteForward(g_hForwards[hns_team_swap]);
 		iWinsTT = 0;
+		
+		set_dhudmessage(0, 0, 255, -1.0, 0.2, .holdtime = 4.0);
+  		show_dhudmessage(0, "%L", LANG_PLAYER, "MAIN_WIN_CTS");
 	} else if (status == WINSTATUS_TERRORISTS) {
 		new iPlayers[MAX_PLAYERS], iCTNum, iTTNum
 		get_players(iPlayers, iCTNum, "che", "CT");
@@ -270,13 +280,16 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 
 		if (iCTNum + iTTNum > 2)
 			iWinsTT++;
+
+		set_dhudmessage(250, 0, 0, -1.0, 0.2, .holdtime = 4.0);
+  		show_dhudmessage(0, "%L", LANG_PLAYER, "MAIN_WIN_TERRORISTS");
 	}
 
 	if (g_pCvar[c_iSwapTeams]) {
 		if (iWinsTT >= g_pCvar[c_iSwapTeams]) {
 			client_print_color(0, print_team_blue, "%L", 0, "MAIN_SWAP", g_pCvar[c_szPrefix], g_pCvar[c_iSwapTeams]);
 			rg_swap_all_players();
-			ExecuteForward(g_hForwards[hns_team_swap], _, 0);
+			ExecuteForward(g_hForwards[hns_team_swap]);
 			iWinsTT = 0;
 		}
 	}
