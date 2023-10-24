@@ -19,6 +19,11 @@ KNIFE_HIDE = Hide knife
 KNIFE_CT = Hide for \yCT \r%s
 KNIFE_TT = Hide for \yTT \r%s
 
+ROUNDINFO_ON = [^3%s^1] Round info is now ^3enabled.
+ROUNDINFO_OFF = [^3%s^1] Round info is now ^3disabled.
+
+HNS_OWNAGE = %n owned %n's head!
+
 HNS_YES = Yes
 HNS_NO = No
 
@@ -42,6 +47,11 @@ LAST_SET = [^3%s^1] ^3%n^1 Взял последние гранаты.
 KNIFE_HIDE = Спрятать нож
 KNIFE_CT = Спрятать у \yКТ \r%s
 KNIFE_TT = Спрятать у \yТТ \r%s
+
+ROUNDINFO_ON = [^3%s^1] Информация о раунде ^3включена.
+ROUNDINFO_OFF = [^3%s^1] Информация о раунде ^3выключена.
+
+HNS_OWNAGE = %n запрыгнул на голову %n!
 
 HNS_YES = Да
 HNS_NO = Нет

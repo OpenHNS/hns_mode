@@ -38,7 +38,9 @@ new const g_szDefaultEntities[][] = {
 }
 
 enum _: Forwards_s {
-	hns_team_swap
+	hns_round_start,
+	hns_team_swap,
+	hns_round_end
 };
 
 new g_hForwards[Forwards_s];
@@ -82,7 +84,9 @@ public plugin_init() {
 
 	set_task(0.5, "delayed_mode");
 
+	g_hForwards[hns_round_start] = CreateMultiForward("hns_round_start", ET_CONTINUE);
 	g_hForwards[hns_team_swap] = CreateMultiForward("hns_team_swap", ET_CONTINUE);
+	g_hForwards[hns_round_end] = CreateMultiForward("hns_round_end", ET_CONTINUE);
 
 	register_dictionary("hidenseek.txt");
 }
@@ -150,6 +154,7 @@ public rgFreezeEnd() {
 
 public rgRoundStart() {
 	set_task(1.0, "taskDestroyBreakables");
+	ExecuteForward(g_hForwards[hns_round_start]);
 }
 
 public rgPlayerResetMaxSpeed(id) {
@@ -171,8 +176,8 @@ public rgPlayerSpawn(id) {
 
 public checkBalanceTeams() {
 	new iPlayers[MAX_PLAYERS], iCTNum, iTTNum
-	get_players(iPlayers, iCTNum, "he", "CT");
-	get_players(iPlayers, iTTNum, "he", "TERRORIST");
+	get_players(iPlayers, iCTNum, "che", "CT");
+	get_players(iPlayers, iTTNum, "che", "TERRORIST");
 
 	if (abs(iCTNum - iTTNum) < 2)
 		return PLUGIN_HANDLED;
@@ -293,6 +298,8 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 			iWinsTT = 0;
 		}
 	}
+
+	ExecuteForward(g_hForwards[hns_round_end]);
 
 	return HC_CONTINUE;
 }

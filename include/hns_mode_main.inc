@@ -14,4 +14,6 @@ native hns_get_prefix(prefix[], len);
 native bool:is_deathmatch();
 native hns_set_mode(HNS_MODE:eMode);
 
+forward hns_round_start();
 forward hns_team_swap();
+forward hns_round_end();
