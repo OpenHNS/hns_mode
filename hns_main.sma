@@ -46,7 +46,7 @@ enum _: Forwards_s {
 new g_hForwards[Forwards_s];
 
 public plugin_init() {
-	register_plugin("HNS Mode Main", "1.0.2", "OpenHNS");
+	register_plugin("HNS Mode Main", "1.0.3", "OpenHNS");
 
 	register_clcmd("chooseteam", "BlockCmd");
 	register_clcmd("jointeam", "BlockCmd");
