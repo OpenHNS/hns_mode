@@ -2,7 +2,13 @@
 #include <reapi>
 #include <hns_mode_main>
 
-#define rg_get_user_team(%0) get_member(%0, m_iTeam)
+enum HNS_CVAR {
+	c_iLastHe,
+	c_iLastFlash,
+	c_iLastSmoke,
+};
+
+new g_pCvar[HNS_CVAR];
 
 new bool:g_bLastFlash;
 
@@ -10,6 +16,10 @@ new g_szPrefix[24];
 
 public plugin_init() {
 	register_plugin("HNS Last grenade", "1.0.0", "OpenHNS");
+
+	bind_pcvar_num(register_cvar("hns_last_he", "0"),		g_pCvar[c_iLastHe]);
+	bind_pcvar_num(register_cvar("hns_last_flash", "1"),	g_pCvar[c_iLastFlash]);
+	bind_pcvar_num(register_cvar("hns_last_smoke", "1"),	g_pCvar[c_iLastSmoke]);
 
 	RegisterHookChain(RG_CSGameRules_RestartRound, "rgRoundStart", true);
 	RegisterHookChain(RG_CBasePlayer_Killed, "rgPlayerKilled", true);
@@ -26,7 +36,7 @@ public rgRoundStart() {
 }
 
 public rgPlayerKilled(victim, attacker) {
-	if (is_deathmatch() || rg_get_user_team(victim) != TEAM_TERRORIST || g_bLastFlash)
+	if (hns_get_mode() != MODE_PUBLIC || rg_get_user_team(victim) != TEAM_TERRORIST || g_bLastFlash)
 			return HC_CONTINUE;
 
 	new iPlayers[MAX_PLAYERS], iNum;
@@ -76,7 +86,7 @@ public NadesHandler(id, hMenu, item) {
 			rg_give_item(id, "weapon_smokegrenade");
 		}
 
-		client_print_color(0, print_team_blue, "%L", 0, "LAST_SET", g_szPrefix, id);
+		client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "LAST_SET", g_szPrefix, id);
 	}
 
 	g_bLastFlash = false;

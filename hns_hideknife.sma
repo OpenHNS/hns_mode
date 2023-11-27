@@ -1,16 +1,14 @@
 #include <amxmodx>
 #include <hamsandwich>
 #include <reapi>
+#include <hns_mode_main>
 
 new bool: g_playerHideKnife[MAX_PLAYERS + 1][TeamName];
 
 public plugin_init() {
-	register_plugin("HNS: Hideknife", "1.0.0", "OpenHNS"); // ufame (https://github.com/ufame/brohns/blob/master/server/src/scripts/hns/hns_hideknife.sma)
+	register_plugin("HNS: Hideknife", "1.0.0", "ufame, OpenHNS"); // ufame (https://github.com/ufame/brohns/blob/master/server/src/scripts/hns/hns_hideknife.sma)
 
-	register_clcmd("say /hideknife", "commandHideKnife");
-	register_clcmd("say_team /hideknife", "commandHideKnife");
-	register_clcmd("say /knife", "commandHideKnife");
-	register_clcmd("say_team /knife", "commandHideKnife");
+	RegisterSayCmd("hideknife", "knife", "commandHideKnife", 0, "Show knife");
 
 	RegisterHam(Ham_Item_Deploy, "weapon_knife", "knifeDeploy", 1);
 

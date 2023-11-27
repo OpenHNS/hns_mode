@@ -3,8 +3,6 @@
 #include <hns_mode_main>
 #include <hns_mode_stats>
 
-#define rg_get_user_team(%0) get_member(%0, m_iTeam)
-
 #define TASK_SHOWSTATS 1328
 
 new g_szPrefix[24];
@@ -36,10 +34,9 @@ new g_iSecShow;
 new g_HudSync;
 
 public plugin_init() {
-	register_plugin("HNS Show round best players", "1.0", "OpenHNS");
+	register_plugin("HNS: Show round best players", "1.0", "OpenHNS");
 
-	register_clcmd("say /roundinfo", "cmdRoundInfo");
-	register_clcmd("say_team /roundinfo", "cmdRoundInfo");
+	RegisterSayCmd("roundinfo", "ri", "cmdRoundInfo", 0, "Show round info");
 
 	g_HudSync = CreateHudSyncObj();
 }

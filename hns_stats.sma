@@ -6,8 +6,6 @@
 
 forward hns_ownage(iToucher, iTouched);
 
-#define rg_get_user_team(%0) get_member(%0, m_iTeam)
-
 #define TASK_TIMER 54345
 
 enum _: PLAYER_STATS {
@@ -32,7 +30,7 @@ new iLastAttacker[MAX_PLAYERS + 1];
 new Float:last_position[MAX_PLAYERS+ 1][3];
 
 public plugin_init() {
-	register_plugin("HNS Stats", "1.0", "OpenHNS"); // Garey
+	register_plugin("HNS: Stats", "1.0", "OpenHNS"); // Garey
 
 	RegisterHookChain(RG_CBasePlayer_Killed, "rgPlayerKilled", true);
 	RegisterHookChain(RG_CBasePlayer_TakeDamage, "rgPlayerTakeDamage", false);

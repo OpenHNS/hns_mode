@@ -19,6 +19,9 @@ KNIFE_HIDE = Hide knife
 KNIFE_CT = Hide for \yCT \r%s
 KNIFE_TT = Hide for \yTT \r%s
 
+NIGHT_START = [^3%s^1] The night deathmatch has been activated.
+NIGHT_STOP = [^3%s^1] The night deathmatch has been stopped.
+
 ROUNDINFO_ON = [^3%s^1] Round info is now ^3enabled.
 ROUNDINFO_OFF = [^3%s^1] Round info is now ^3disabled.
 
@@ -47,6 +50,9 @@ LAST_SET = [^3%s^1] ^3%n^1 Взял последние гранаты.
 KNIFE_HIDE = Спрятать нож
 KNIFE_CT = Спрятать у \yКТ \r%s
 KNIFE_TT = Спрятать у \yТТ \r%s
+
+NIGHT_START = [^3%s^1] Активирован ночной дезматч.
+NIGHT_STOP = [^3%s^1] Ночной дезматч остановлен.
 
 ROUNDINFO_ON = [^3%s^1] Информация о раунде ^3включена.
 ROUNDINFO_OFF = [^3%s^1] Информация о раунде ^3выключена.

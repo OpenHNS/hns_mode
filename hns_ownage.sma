@@ -1,8 +1,7 @@
 #include <amxmodx>
 #include <engine>
 #include <reapi>
-
-#define rg_get_user_team(%0) get_member(%0, m_iTeam)
+#include <hns_mode_main>
 
 new Float:g_pCvarDelay;
 
@@ -16,7 +15,7 @@ new const g_szSound[][] = {
 };
 
 public plugin_init() {
-	register_plugin("HNS Ownage", "1.0", "OpenHNS");
+	register_plugin("HNS: Ownage", "1.0", "OpenHNS");
 
 	bind_pcvar_float(register_cvar("hns_ownage_delay", "5.0"), g_pCvarDelay);
 

@@ -5,7 +5,12 @@
 
 #define rg_get_user_team(%0) get_member(%0, m_iTeam)
 
-new bool:g_isDeathMatch;
+enum _:HNS_MODES {
+	MODE_PUBLIC = 0,
+	MODE_DEATHMATCH
+}
+
+new g_iCurrentMode;
 
 enum HNS_CVAR {
 	c_iDeathMatch,
@@ -46,7 +51,7 @@ enum _: Forwards_s {
 new g_hForwards[Forwards_s];
 
 public plugin_init() {
-	register_plugin("HNS Mode Main", "1.0.3", "OpenHNS");
+	register_plugin("HNS Mode Main", "1.0.4", "OpenHNS");
 
 	register_clcmd("chooseteam", "BlockCmd");
 	register_clcmd("jointeam", "BlockCmd");
@@ -91,6 +96,13 @@ public plugin_init() {
 	register_dictionary("hidenseek.txt");
 }
 
+public plugin_cfg() {
+	new szPath[PLATFORM_MAX_PATH];
+	get_localinfo("amxx_configsdir", szPath, charsmax(szPath));
+	format(szPath, charsmax(szPath), "%s/%s", szPath, "hns_mode.cfg");
+	server_cmd("exec %s", szPath);
+}
+
 public plugin_precache() {
 	engfunc(EngFunc_CreateNamedEntity, engfunc(EngFunc_AllocString, "func_buyzone"));
 
@@ -108,7 +120,7 @@ public plugin_precache() {
 public plugin_natives() {
 	register_native("hns_get_prefix", "native_get_prefix");
 	
-	register_native("is_deathmatch", "native_is_deathmatch");
+	register_native("hns_get_mode", "native_get_mode");
 	register_native("hns_set_mode", "native_set_mode");
 }
 
@@ -119,27 +131,31 @@ public native_get_prefix(amxx, params) {
 	set_string(arg_prefix, g_pCvar[c_szPrefix], get_param(arg_len));
 }
 
-public native_is_deathmatch(amxx, params) {
-	return g_isDeathMatch;
+public native_get_mode(amxx, params) {
+	return g_iCurrentMode;
 }
 
 public native_set_mode(amxx, params) {
-	enum { bool:isDM = false };
-
-	hns_set_mode(isDM);
+	enum { argMode = 1 };
+	hns_set_mode(get_param(argMode));
 }
 
 public delayed_mode() {
-	set_cvar_string("mp_auto_join_team", "1");
-	set_cvar_string("mp_forcechasecam", "0");
-	set_cvar_string("mp_forcecamera", "0");
-	set_cvar_string("mp_autoteambalance", "2");
-	set_cvar_string("sv_alltalk", "1");
+	set_cvar_num("mp_auto_join_team", 1);
+	set_cvar_num("mp_forcechasecam", 0);
+	set_cvar_num("mp_forcecamera", 0);
+	set_cvar_num("mp_autoteambalance", 2);
+	set_cvar_num("sv_alltalk", 1);
+	set_cvar_num("mp_buytime", 0);
+	set_cvar_num("mp_roundover", 2);
+	set_cvar_num("mp_give_player_c4", 0);
+	set_cvar_string("mp_t_default_weapons_secondary", "");
+	set_cvar_string("mp_ct_default_weapons_secondary", "");
 
 	if (g_pCvar[c_iDeathMatch]) {
-		hns_set_mode(true);
+		hns_set_mode(MODE_DEATHMATCH);
 	} else {
-		hns_set_mode(false);
+		hns_set_mode(MODE_PUBLIC);
 	}
 }
 
@@ -170,7 +186,7 @@ public rgPlayerResetMaxSpeed(id) {
 public rgPlayerSpawn(id) {
 	setUserRole(id);
 
-	if (g_isDeathMatch)
+	if (g_iCurrentMode == MODE_DEATHMATCH)
 		checkBalanceTeams();
 }
 
@@ -187,7 +203,7 @@ public checkBalanceTeams() {
 		if (iPlayer) {
 			rg_set_user_team(iPlayer, TEAM_TERRORIST);
 			setUserRole(iPlayer);
-			client_print_color(0, print_team_blue, "%L", 0, "MAIN_TRANSFER_CT", g_pCvar[c_szPrefix], iPlayer);
+			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_CT", g_pCvar[c_szPrefix], iPlayer);
 		}
 	} else {
 		new iPlayer = getRandomAlivePlayer(TEAM_TERRORIST);
@@ -195,7 +211,7 @@ public checkBalanceTeams() {
 			rg_set_user_team(iPlayer, TEAM_CT);
 			setUserRole(iPlayer);
 
-			client_print_color(0, print_team_blue, "%L", 0, "MAIN_TRANSFER_TT", g_pCvar[c_szPrefix], iPlayer);
+			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_TT", g_pCvar[c_szPrefix], iPlayer);
 		}
 	}
 
@@ -203,7 +219,7 @@ public checkBalanceTeams() {
 }
 
 public rgPlayerKilled(victim, attacker) {
-	if (!g_isDeathMatch)
+	if (g_iCurrentMode != MODE_DEATHMATCH)
 		return HC_CONTINUE;
 
 	if (attacker == 0 || !is_user_connected(attacker)) {
@@ -211,7 +227,7 @@ public rgPlayerKilled(victim, attacker) {
 			new iLucky = getRandomAlivePlayer(TEAM_CT);
 			if (iLucky) {
 				rg_set_user_team(iLucky, TEAM_TERRORIST);
-				client_print_color(0, print_team_blue, "%L", 0, "MAIN_TRANSFER_TT", g_pCvar[c_szPrefix], iLucky)
+				client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_TT", g_pCvar[c_szPrefix], iLucky)
 				rg_set_user_team(victim, TEAM_CT);
 				setUserRole(iLucky);
 			}
@@ -292,7 +308,7 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 
 	if (g_pCvar[c_iSwapTeams]) {
 		if (iWinsTT >= g_pCvar[c_iSwapTeams]) {
-			client_print_color(0, print_team_blue, "%L", 0, "MAIN_SWAP", g_pCvar[c_szPrefix], g_pCvar[c_iSwapTeams]);
+			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_SWAP", g_pCvar[c_szPrefix], g_pCvar[c_iSwapTeams]);
 			rg_swap_all_players();
 			ExecuteForward(g_hForwards[hns_team_swap]);
 			iWinsTT = 0;
@@ -336,7 +352,7 @@ public fwdEmitSound(id, iChannel, szSample[], Float:volume, Float:attenuation, f
 			emit_sound(id, iChannel, g_szUseSound, volume, attenuation, fFlags, pitch);
 		} else {
 			emit_sound(id, iChannel, g_szUseSwist, volume, attenuation, fFlags, pitch);
-			client_print_color(0, print_team_blue, "%L", 0, "MAIN_SWIST", g_pCvar[c_szPrefix], id);
+			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_SWIST", g_pCvar[c_szPrefix], id);
 			flNextTime[id] = get_gametime() + 20.0;
 		}
 
@@ -347,14 +363,14 @@ public fwdEmitSound(id, iChannel, szSample[], Float:volume, Float:attenuation, f
 }
 
 public fwdClientKill(id) {
-	if (g_isDeathMatch) {
+	if (g_iCurrentMode == MODE_DEATHMATCH) {
 		client_print_color(id, print_team_blue, "%L", id, "MAIN_KILL_NOT", g_pCvar[c_szPrefix]);
 		return FMRES_SUPERCEDE;
 	} else if (rg_get_remaining_time() > 60.0) {
 		client_print_color(id, print_team_blue, "%L", id, "MAIN_KILL_WAIT", g_pCvar[c_szPrefix]);
 		return FMRES_SUPERCEDE;
 	} else {
-		client_print_color(0, print_team_blue, "%L", 0, "MAIN_KILL", g_pCvar[c_szPrefix], id);
+		client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_KILL", g_pCvar[c_szPrefix], id);
 	}
 	return FMRES_IGNORED;
 }
@@ -413,27 +429,30 @@ stock Float:rg_get_remaining_time() {
     return (float(get_member_game(m_iRoundTimeSecs)) - get_gametime() + Float:get_member_game(m_fRoundStartTimeReal));
 }
 
-public hns_set_mode(isDM) {
-	g_isDeathMatch = isDM ? true : false;
+public hns_set_mode(iCurrentMode) {
+	g_iCurrentMode = iCurrentMode;
 
-	if (isDM) {
-		set_cvar_string("mp_freezetime", "0");
-		set_cvar_string("mp_roundtime", "0");
-		set_cvar_string("mp_roundrespawn_time", "-1");
-		set_cvar_string("mp_round_infinite", "1");
+	switch (g_iCurrentMode) {
+		case MODE_DEATHMATCH: {
+			set_cvar_num("mp_freezetime", 0);
+			set_cvar_num("mp_roundtime", 0);
+			set_cvar_num("mp_roundrespawn_time", -1);
+			set_cvar_num("mp_round_infinite", 1);
+			
+			set_cvar_num("hns_deathmatch", 1); // Переделать
+		}
+		case MODE_PUBLIC: {
+			set_cvar_num("mp_freezetime", 5);
+			set_cvar_float("mp_roundtime", 2.5);
+			set_cvar_num("mp_roundrespawn_time", 20);
+			set_cvar_num("mp_round_infinite", 0);
+
 		
-		set_cvar_string("hns_deathmatch", "1"); // Переделать
-	} else {
-		set_cvar_string("mp_freezetime", "5");
-		set_cvar_string("mp_roundtime", "2.5");
-		set_cvar_string("mp_roundrespawn_time", "20");
-		set_cvar_string("mp_round_infinite", "0");
-
-	
-		set_cvar_string("hns_deathmatch", "0"); // Переделать
+			set_cvar_num("hns_deathmatch", 0); // Переделать
+		}
 	}
 
-	set_cvar_string("sv_restart", "1");
+	set_cvar_num("sv_restart", 1);
 }
 
 stock getRandomAlivePlayer(TeamName:iTeam) {

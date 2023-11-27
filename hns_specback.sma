@@ -2,16 +2,13 @@
 #include <reapi>
 #include <hns_mode_main>
 
-#define rg_get_user_team(%0) get_member(%0, m_iTeam)
-
 new bool:g_bSpec[MAX_PLAYERS + 1];
 new TeamName:g_iTeam[MAX_PLAYERS + 1];
 
 public plugin_init() {
-	register_plugin("HNS Spec back", "1.0.0", "OpenHNS");
+	register_plugin("HNS: Spec back", "1.0.0", "OpenHNS");
 
-	register_clcmd("say /spec", "SpecBack");
-	register_clcmd("say /back", "SpecBack");
+	RegisterSayCmd("spec", "back", "SpecBack", 0, "Spec/Back");
 }
 
 public hns_team_swap() {
@@ -44,7 +41,7 @@ public SpecBack(id) {
 
 		rg_set_user_team(id, g_iTeam[id]);
 
-		if (is_deathmatch()) {
+		if (hns_get_mode() == MODE_DEATHMATCH) {
 			rg_round_respawn(id);
 		}
 	}
