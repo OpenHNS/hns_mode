@@ -20,9 +20,12 @@ enum HNS_CVAR {
 	c_iSmoke,
 	c_iSwapTeams,
 	c_iSwist,
-	c_szPrefix[24]
+	c_szPrefix[24],
+	c_flRoundTime
 }
 new g_pCvar[HNS_CVAR];
+
+new g_pRoundTime;
 
 new g_iRegisterSpawn;
 
@@ -65,6 +68,10 @@ public plugin_init() {
 	bind_pcvar_num(register_cvar("hns_swap_team",  "2"),	g_pCvar[c_iSwapTeams]);
 	bind_pcvar_num(register_cvar("hns_swist",  "1"),		g_pCvar[c_iSwist]);
 	bind_pcvar_string(register_cvar("hns_prefix", "HNS"),	g_pCvar[c_szPrefix], charsmax(g_pCvar[c_szPrefix]));
+	bind_pcvar_float(register_cvar("hns_roundtime", "2.5"), Float:g_pCvar[c_flRoundTime]);
+
+	g_pRoundTime = get_cvar_pointer("mp_roundtime");
+	g_pCvar[c_flRoundTime] = _:get_pcvar_float(_:g_pRoundTime);
 
 	RegisterHookChain(RG_CSGameRules_OnRoundFreezeEnd, "rgFreezeEnd", true);
 	RegisterHookChain(RG_CSGameRules_RestartRound, "rgRoundStart", true);
@@ -270,6 +277,11 @@ public rgPlayerBlind(id) {
 }
 
 public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay) {
+	new g_Roundtime = get_cvar_pointer("mp_roundtime");
+
+	set_cvar_float("hns_roundtime", Float:g_pCvar[c_flRoundTime]);
+	set_pcvar_float(_:g_Roundtime, Float:g_pCvar[c_flRoundTime]);
+
 	if (event == ROUND_TARGET_SAVED || event == ROUND_HOSTAGE_NOT_RESCUED) {
 		SetHookChainArg(1, ATYPE_INTEGER, WINSTATUS_TERRORISTS);
 		SetHookChainArg(2, ATYPE_INTEGER, ROUND_TERRORISTS_ESCAPED);
@@ -426,16 +438,19 @@ stock setUserRole(id) {
 
 // Albertio
 stock Float:rg_get_remaining_time() {
-    return (float(get_member_game(m_iRoundTimeSecs)) - get_gametime() + Float:get_member_game(m_fRoundStartTimeReal));
+	return (float(get_member_game(m_iRoundTimeSecs)) - get_gametime() + Float:get_member_game(m_fRoundStartTimeReal));
 }
 
 public hns_set_mode(iCurrentMode) {
 	g_iCurrentMode = iCurrentMode;
 
+	new g_Roundtime = get_cvar_pointer("mp_roundtime");
+
 	switch (g_iCurrentMode) {
 		case MODE_DEATHMATCH: {
 			set_cvar_num("mp_freezetime", 0);
-			set_cvar_num("mp_roundtime", 0);
+			set_cvar_float("hns_roundtime", 0.0);
+			set_pcvar_float(_:g_Roundtime, 0.0);
 			set_cvar_num("mp_roundrespawn_time", -1);
 			set_cvar_num("mp_round_infinite", 1);
 			
@@ -443,10 +458,10 @@ public hns_set_mode(iCurrentMode) {
 		}
 		case MODE_PUBLIC: {
 			set_cvar_num("mp_freezetime", 5);
-			set_cvar_float("mp_roundtime", 2.5);
+			set_cvar_float("hns_roundtime", Float:g_pCvar[c_flRoundTime]);
+			set_pcvar_float(_:g_Roundtime, Float:g_pCvar[c_flRoundTime]);
 			set_cvar_num("mp_roundrespawn_time", 20);
 			set_cvar_num("mp_round_infinite", 0);
-
 		
 			set_cvar_num("hns_deathmatch", 0); // Переделать
 		}
