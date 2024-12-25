@@ -448,7 +448,7 @@ public hns_set_mode(iCurrentMode) {
 	switch (g_iCurrentMode) {
 		case MODE_DEATHMATCH: {
 			set_cvar_num("mp_freezetime", 0);
-			g_pCvar[c_flRoundTime] = 0;
+			set_cvar_num("hns_roundtime", 0);
 			set_pcvar_float(_:g_Roundtime, 0.0);
 			set_cvar_num("mp_roundrespawn_time", -1);
 			set_cvar_num("mp_round_infinite", 1);
