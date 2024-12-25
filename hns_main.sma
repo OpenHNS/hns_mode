@@ -279,7 +279,6 @@ public rgPlayerBlind(id) {
 public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay) {
 	new g_Roundtime = get_cvar_pointer("mp_roundtime");
 
-	set_cvar_float("hns_roundtime", Float:g_pCvar[c_flRoundTime]);
 	set_pcvar_float(_:g_Roundtime, Float:g_pCvar[c_flRoundTime]);
 
 	if (event == ROUND_TARGET_SAVED || event == ROUND_HOSTAGE_NOT_RESCUED) {
@@ -449,7 +448,7 @@ public hns_set_mode(iCurrentMode) {
 	switch (g_iCurrentMode) {
 		case MODE_DEATHMATCH: {
 			set_cvar_num("mp_freezetime", 0);
-			set_cvar_float("hns_roundtime", 0.0);
+			g_pCvar[c_flRoundTime] = 0;
 			set_pcvar_float(_:g_Roundtime, 0.0);
 			set_cvar_num("mp_roundrespawn_time", -1);
 			set_cvar_num("mp_round_infinite", 1);
@@ -458,7 +457,6 @@ public hns_set_mode(iCurrentMode) {
 		}
 		case MODE_PUBLIC: {
 			set_cvar_num("mp_freezetime", 5);
-			set_cvar_float("hns_roundtime", Float:g_pCvar[c_flRoundTime]);
 			set_pcvar_float(_:g_Roundtime, Float:g_pCvar[c_flRoundTime]);
 			set_cvar_num("mp_roundrespawn_time", 20);
 			set_cvar_num("mp_round_infinite", 0);
