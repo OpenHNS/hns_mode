@@ -4,12 +4,34 @@ Hide'N'Seek mod for Counter-Strike 1.6 and additional plugins.
 
 ## Requirement
 
-- [ReHLDS](https://dev-cs.ru/resources/64/)
-- [Amxmodx 1.9.0](https://dev-cs.ru/resources/405/)
-- [Reapi (last)](https://dev-cs.ru/resources/73/updates)
-- [ReGameDLL (last)](https://dev-cs.ru/resources/67/updates)
-- [ReSemiclip (last)](https://dev-cs.ru/resources/71/updates)
-
+<div style="display: flex;">
+<table style="border-collapse: collapse; width: 50%;">
+    <tr>
+        <td style="text-align: left; padding: 10px;"><a href="https://github.com/rehlds/rehlds" target="_blank">ReHLDS</a></td>
+        <td style="text-align: right; padding: 10px;"><a href="https://github.com/rehlds/rehlds/releases"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/rehlds/rehlds?include_prereleases&style=flat-square"></a></td>
+    </tr>
+    <tr>
+        <td style="text-align: left; padding: 10px;"><a href="https://github.com/rehlds/ReGameDLL_CS" target="_blank">ReGameDLL_CS</a></td>
+        <td style="text-align: right; padding: 10px;"><a href="https://github.com/rehlds/ReGameDLL_CS/releases"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/s1lentq/ReGameDLL_CS?include_prereleases&style=flat-square"></a></td>
+    </tr>
+    <tr>
+        <td style="text-align: left; padding: 10px;"><a href="https://github.com/rehlds/Metamod-R" target="_blank">Metamod-R</a></td>
+        <td style="text-align: right; padding: 10px;"><a href="https://github.com/rehlds/Metamod-R/releases"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/rehlds/Metamod-R?include_prereleases&style=flat-square"></a></td>
+    </tr>
+    <tr>
+        <td style="text-align: left; padding: 10px;"><a href="https://github.com/rehlds/resemiclip" target="_blank">ReSemiclip</a></td>
+        <td style="text-align: right; padding: 10px;"><a href="https://github.com/rehlds/resemiclip/releases"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/rehlds/resemiclip?include_prereleases&style=flat-square"></a></td>
+    </tr>
+    <tr>
+        <td style="text-align: left; padding: 10px;"><a href="https://www.amxmodx.org/downloads-new.php" target="_blank">AMXModX (v1.9 or v1.10)</a></td>
+        <td style="text-align: right; padding: 10px;"><a href="https://www.amxmodx.org/downloads-new.php"><img alt="AMXModX dependency" src="https://img.shields.io/badge/AMXModX-1.9 | 1.10-blue?style=flat-square"></a></td>
+    </tr>
+    <tr>
+        <td style="text-align: left; padding: 10px;"><a href="https://github.com/rehlds/reapi" target="_blank">ReAPI</a></td>
+        <td style="text-align: right; padding: 10px;"><a href="https://github.com/rehlds/reapi/releases"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/rehlds/reapi?include_prereleases&style=flat-square"></a></td>
+    </tr>
+</table>
+</div>
 ## Features
 
 - Public / DeathMatch mod.
