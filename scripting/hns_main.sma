@@ -80,6 +80,7 @@ public plugin_init() {
 	RegisterHookChain(RG_CBasePlayer_Killed, "rgPlayerKilled", true);
 	RegisterHookChain(RG_PlayerBlind, "rgPlayerBlind");
 	RegisterHookChain(RG_RoundEnd, "rgRoundEnd");
+	//RegisterHookChain(RH_Cvar_DirectSet, "RHCvarDirectSet");
 	
 	RegisterHam(Ham_Weapon_PrimaryAttack, "weapon_knife", "hamKnifePrim");
 	RegisterHam(Ham_Item_Deploy, "weapon_knife", "hamDeployKnife", true);
@@ -330,6 +331,9 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 
 	return HC_CONTINUE;
 }
+
+// public RHCvarDirectSet(pcvar, const value[]) {
+// }
 
 public hamKnifePrim(iPlayer) {
 	ExecuteHamB(Ham_Weapon_SecondaryAttack, iPlayer)

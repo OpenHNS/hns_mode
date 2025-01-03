@@ -19,11 +19,11 @@ KNIFE_HIDE = Hide knife
 KNIFE_CT = Hide for \yCT \r%s
 KNIFE_TT = Hide for \yTT \r%s
 
-NIGHT_START = [^3%s^1] The night deathmatch has been activated.
-NIGHT_STOP = [^3%s^1] The night deathmatch has been stopped.
+NIGHT_START = [^3%s^1] The night deathmatch has been ^3activated^1.
+NIGHT_STOP = [^3%s^1] The night deathmatch has been ^3stopped^1.
 
-ROUNDINFO_ON = [^3%s^1] Round info is now ^3enabled.
-ROUNDINFO_OFF = [^3%s^1] Round info is now ^3disabled.
+ROUNDINFO_ON = [^3%s^1] Round info is now ^3enabled^1.
+ROUNDINFO_OFF = [^3%s^1] Round info is now ^3disabled^1.
 
 HNS_OWNAGE = %n owned %n's head!
 
@@ -51,11 +51,11 @@ KNIFE_HIDE = Спрятать нож
 KNIFE_CT = Спрятать у \yКТ \r%s
 KNIFE_TT = Спрятать у \yТТ \r%s
 
-NIGHT_START = [^3%s^1] Активирован ночной дезматч.
-NIGHT_STOP = [^3%s^1] Ночной дезматч остановлен.
+NIGHT_START = [^3%s^1] Активирован ночной ^3deathmatch^1.
+NIGHT_STOP = [^3%s^1] Остановился ночной ^3deathmatch^1.
 
-ROUNDINFO_ON = [^3%s^1] Информация о раунде ^3включена.
-ROUNDINFO_OFF = [^3%s^1] Информация о раунде ^3выключена.
+ROUNDINFO_ON = [^3%s^1] Информация о раунде ^3включена^1.
+ROUNDINFO_OFF = [^3%s^1] Информация о раунде ^3выключена^1.
 
 HNS_OWNAGE = %n запрыгнул на голову %n!
 

@@ -18,18 +18,22 @@ public plugin_init()
 	
 	bind_pcvar_num(register_cvar("hns_start_night", "23"), 	g_pCvar[c_iStartNight]);
 	bind_pcvar_num(register_cvar("hns_end_night", "9"),		g_pCvar[c_iEndNight]);
+
+	set_task(0.6, "check_night");
 }
 
 public plugin_cfg() {
+	hns_get_prefix(g_szPrefix, charsmax(g_szPrefix));
+}
+
+public check_night() {
 	if (isNight()) {
-		set_cvar_num("hns_deathmatch", 1);
+		hns_set_mode(MODE_DEATHMATCH);
 		g_bNight = true;
 	} else {
-		set_cvar_num("hns_deathmatch", 0);
+		hns_set_mode(MODE_PUBLIC);
 		g_bNight = false;
 	}
-
-	hns_get_prefix(g_szPrefix, charsmax(g_szPrefix));
 }
 
 public hns_round_start() {
