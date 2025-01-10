@@ -11,6 +11,8 @@ MAIN_SWIST = [^3%s^1] ^3%n^1 whistle.
 MAIN_KILL_NOT = [^3%s^1] Not available for DM mode.
 MAIN_KILL_WAIT = [^3%s^1] Not available at the beginning of the round.
 MAIN_KILL = [^3%s^1] ^3%n^1 killed himself.
+MAIN_RUN_DEATHMATCH = [^3%s^1] ^3Deathmatch^1 mode activated.
+MAIN_RUN_PUBLIC = [^3%s^1] ^3Public^1 mode activated.
 
 LAST_NEED = \r Need grenades?
 LAST_SET = [^3%s^1] ^3%n^1 Took the last grenades.
@@ -43,6 +45,8 @@ MAIN_SWIST = [^3%s^1] ^3%n^1 свистнул.
 MAIN_KILL_NOT = [^3%s^1] Не доступно для режима ДМ.
 MAIN_KILL_WAIT = [^3%s^1] Не доступно в начале раунда.
 MAIN_KILL = [^3%s^1] ^3%n^1 убил сам себя.
+MAIN_RUN_DEATHMATCH = [^3%s^1] ^3Deathmatch^1 мод активирован.
+MAIN_RUN_PUBLIC = [^3%s^1] ^3Public^1 активирован.
 
 LAST_NEED = \rНужны гранаты?
 LAST_SET = [^3%s^1] ^3%n^1 Взял последние гранаты.

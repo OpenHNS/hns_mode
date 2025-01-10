@@ -21,9 +21,11 @@ enum HNS_CVAR {
 	c_iSwapTeams,
 	c_iSwist,
 	c_szPrefix[24],
-	c_flRoundTime
+	Float:c_flRoundTime
 }
+
 new g_pCvar[HNS_CVAR];
+new _:g_iSettings[HNS_CVAR];
 
 new g_pRoundTime;
 
@@ -54,21 +56,38 @@ enum _: Forwards_s {
 new g_hForwards[Forwards_s];
 
 public plugin_init() {
-	register_plugin("HNS Mode Main", "1.0.4", "OpenHNS");
+	register_plugin("HNS Mode Main", "1.0.4.2", "OpenHNS");
 
 	register_clcmd("chooseteam", "BlockCmd");
 	register_clcmd("jointeam", "BlockCmd");
 	register_clcmd("joinclass", "BlockCmd");
 
-	bind_pcvar_num(register_cvar("hns_deathmatch", "0"),	g_pCvar[c_iDeathMatch]);
-	bind_pcvar_num(register_cvar("hns_respawn", "3"),		g_pCvar[c_iDmRespawn]);
-	bind_pcvar_num(register_cvar("hns_he", "0"),			g_pCvar[c_iHe]);
-	bind_pcvar_num(register_cvar("hns_flash", "2"),			g_pCvar[c_iFlash]);
-	bind_pcvar_num(register_cvar("hns_smoke", "1"),			g_pCvar[c_iSmoke]);
-	bind_pcvar_num(register_cvar("hns_swap_team",  "2"),	g_pCvar[c_iSwapTeams]);
-	bind_pcvar_num(register_cvar("hns_swist",  "1"),		g_pCvar[c_iSwist]);
-	bind_pcvar_string(register_cvar("hns_prefix", "HNS"),	g_pCvar[c_szPrefix], charsmax(g_pCvar[c_szPrefix]));
-	bind_pcvar_float(register_cvar("hns_roundtime", "2.5"), Float:g_pCvar[c_flRoundTime]);
+	g_pCvar[c_iDeathMatch] = create_cvar("hns_deathmatch", "0", FCVAR_NONE, "Deathmatch mod `1` Enable / `0` Disable", true, 0.0, true, 1.0);
+	bind_pcvar_num(g_pCvar[c_iDeathMatch], g_iSettings[c_iDeathMatch]);
+
+	g_pCvar[c_iDmRespawn] = create_cvar("hns_respawn", "3", FCVAR_NONE, "Number of seconds to revive players in DM mode", true, 0.0, true, 20.0);
+	bind_pcvar_num(g_pCvar[c_iDmRespawn], g_iSettings[c_iDmRespawn]);
+	
+	g_pCvar[c_iHe] = create_cvar("hns_he", "0", FCVAR_NONE, "He number of grenades on TT team", true, 0.0, true, 10.0);
+	bind_pcvar_num(g_pCvar[c_iHe], g_iSettings[c_iHe]);
+	
+	g_pCvar[c_iFlash] = create_cvar("hns_flash", "2", FCVAR_NONE, "Flash number of grenades on TT team", true, 0.0, true, 10.0);
+	bind_pcvar_num(g_pCvar[c_iFlash], g_iSettings[c_iFlash]);
+	
+	g_pCvar[c_iSmoke] = create_cvar("hns_smoke", "1", FCVAR_NONE, "Smoke number of grenades on TT team", true, 0.0, true, 10.0);
+	bind_pcvar_num(g_pCvar[c_iSmoke], g_iSettings[c_iSmoke]);
+	
+	g_pCvar[c_iSwapTeams] = create_cvar("hns_swap_team", "2", FCVAR_NONE, "Number of consecutive rounds won by the TT team after which to swap teams", true, 0.0, true, 10.0);
+	bind_pcvar_num(g_pCvar[c_iSwapTeams], g_iSettings[c_iSwapTeams]);
+	
+	g_pCvar[c_iSwist] = create_cvar("hns_swist", "1", FCVAR_NONE, "whistle (+USE) on TT team `1` Enable / `0` Disable", true, 0.0, true, 1.0);
+	bind_pcvar_num(g_pCvar[c_iSwist], g_iSettings[c_iSwist]);
+	
+	g_pCvar[c_szPrefix] = create_cvar("hns_prefix", "Match", FCVAR_NONE, "System prefix");
+	bind_pcvar_string(g_pCvar[c_szPrefix], g_iSettings[c_szPrefix], charsmax(g_iSettings[c_szPrefix]));
+	
+	g_pCvar[c_flRoundTime] = _:create_cvar("hns_roundtime", "2.5", FCVAR_NONE, "Public roundtime", true, 0.0, true, 99.0);
+	bind_pcvar_float(_:g_pCvar[c_flRoundTime], g_iSettings[c_flRoundTime]);
 
 	g_pRoundTime = get_cvar_pointer("mp_roundtime");
 	g_pCvar[c_flRoundTime] = _:get_pcvar_float(_:g_pRoundTime);
@@ -80,7 +99,7 @@ public plugin_init() {
 	RegisterHookChain(RG_CBasePlayer_Killed, "rgPlayerKilled", true);
 	RegisterHookChain(RG_PlayerBlind, "rgPlayerBlind");
 	RegisterHookChain(RG_RoundEnd, "rgRoundEnd");
-	//RegisterHookChain(RH_Cvar_DirectSet, "RHCvarDirectSet");
+	RegisterHookChain(RH_Cvar_DirectSet, "RHCvarDirectSet");
 	
 	RegisterHam(Ham_Weapon_PrimaryAttack, "weapon_knife", "hamKnifePrim");
 	RegisterHam(Ham_Item_Deploy, "weapon_knife", "hamDeployKnife", true);
@@ -136,7 +155,7 @@ public native_get_prefix(amxx, params) {
 	enum {
 		arg_prefix = 1, arg_len
 	};
-	set_string(arg_prefix, g_pCvar[c_szPrefix], get_param(arg_len));
+	set_string(arg_prefix, g_iSettings[c_szPrefix], get_param(arg_len));
 }
 
 public native_get_mode(amxx, params) {
@@ -160,7 +179,7 @@ public delayed_mode() {
 	set_cvar_string("mp_t_default_weapons_secondary", "");
 	set_cvar_string("mp_ct_default_weapons_secondary", "");
 
-	if (g_pCvar[c_iDeathMatch]) {
+	if (g_iSettings[c_iDeathMatch]) {
 		hns_set_mode(MODE_DEATHMATCH);
 	} else {
 		hns_set_mode(MODE_PUBLIC);
@@ -211,7 +230,7 @@ public checkBalanceTeams() {
 		if (iPlayer) {
 			rg_set_user_team(iPlayer, TEAM_TERRORIST);
 			setUserRole(iPlayer);
-			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_CT", g_pCvar[c_szPrefix], iPlayer);
+			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_CT", g_iSettings[c_szPrefix], iPlayer);
 		}
 	} else {
 		new iPlayer = getRandomAlivePlayer(TEAM_TERRORIST);
@@ -219,7 +238,7 @@ public checkBalanceTeams() {
 			rg_set_user_team(iPlayer, TEAM_CT);
 			setUserRole(iPlayer);
 
-			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_TT", g_pCvar[c_szPrefix], iPlayer);
+			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_TT", g_iSettings[c_szPrefix], iPlayer);
 		}
 	}
 
@@ -235,7 +254,7 @@ public rgPlayerKilled(victim, attacker) {
 			new iLucky = getRandomAlivePlayer(TEAM_CT);
 			if (iLucky) {
 				rg_set_user_team(iLucky, TEAM_TERRORIST);
-				client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_TT", g_pCvar[c_szPrefix], iLucky)
+				client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_TT", g_iSettings[c_szPrefix], iLucky)
 				rg_set_user_team(victim, TEAM_CT);
 				setUserRole(iLucky);
 			}
@@ -247,7 +266,7 @@ public rgPlayerKilled(victim, attacker) {
 		setUserRole(attacker);
 	}
 
-	set_task(float(g_pCvar[c_iDmRespawn]), "taskRespawnPlayer", victim);
+	set_task(float(g_iSettings[c_iDmRespawn]), "taskRespawnPlayer", victim);
 
 	return HC_CONTINUE;
 }
@@ -280,7 +299,7 @@ public rgPlayerBlind(id) {
 public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay) {
 	new g_Roundtime = get_cvar_pointer("mp_roundtime");
 
-	set_pcvar_float(_:g_Roundtime, Float:g_pCvar[c_flRoundTime]);
+	set_pcvar_float(_:g_Roundtime, Float:g_iSettings[c_flRoundTime]);
 
 	if (event == ROUND_TARGET_SAVED || event == ROUND_HOSTAGE_NOT_RESCUED) {
 		SetHookChainArg(1, ATYPE_INTEGER, WINSTATUS_TERRORISTS);
@@ -318,9 +337,9 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
   		show_dhudmessage(0, "%L", LANG_PLAYER, "MAIN_WIN_TERRORISTS");
 	}
 
-	if (g_pCvar[c_iSwapTeams]) {
-		if (iWinsTT >= g_pCvar[c_iSwapTeams]) {
-			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_SWAP", g_pCvar[c_szPrefix], g_pCvar[c_iSwapTeams]);
+	if (g_iSettings[c_iSwapTeams]) {
+		if (iWinsTT >= g_iSettings[c_iSwapTeams]) {
+			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_SWAP", g_iSettings[c_szPrefix], g_iSettings[c_iSwapTeams]);
 			rg_swap_all_players();
 			ExecuteForward(g_hForwards[hns_team_swap]);
 			iWinsTT = 0;
@@ -332,8 +351,21 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 	return HC_CONTINUE;
 }
 
-// public RHCvarDirectSet(pcvar, const value[]) {
-// }
+public RHCvarDirectSet(pcvar, const value[]) {
+	if (pcvar != g_pCvar[c_iDeathMatch]) {
+		return HC_CONTINUE;
+	}
+
+	if (str_to_num(value)) {
+		hns_set_mode(MODE_DEATHMATCH);
+		client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_RUN_DEATHMATCH", g_iSettings[c_szPrefix]);
+	} else {
+		hns_set_mode(MODE_PUBLIC);
+		client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_RUN_PUBLIC", g_iSettings[c_szPrefix]);
+	}
+
+	return HC_CONTINUE;
+}
 
 public hamKnifePrim(iPlayer) {
 	ExecuteHamB(Ham_Weapon_SecondaryAttack, iPlayer)
@@ -355,7 +387,7 @@ public fwdEmitSound(id, iChannel, szSample[], Float:volume, Float:attenuation, f
 		return FMRES_SUPERCEDE;
 
 	if (is_user_alive(id) && rg_get_user_team(id) == TEAM_TERRORIST && equal(szSample, g_szDenyselect)) {
-		if (!g_pCvar[c_iSwist]) {
+		if (!g_iSettings[c_iSwist]) {
 			emit_sound(id, iChannel, g_szUseSound, volume, attenuation, fFlags, pitch);
 			return FMRES_SUPERCEDE;
 		}
@@ -367,7 +399,7 @@ public fwdEmitSound(id, iChannel, szSample[], Float:volume, Float:attenuation, f
 			emit_sound(id, iChannel, g_szUseSound, volume, attenuation, fFlags, pitch);
 		} else {
 			emit_sound(id, iChannel, g_szUseSwist, volume, attenuation, fFlags, pitch);
-			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_SWIST", g_pCvar[c_szPrefix], id);
+			client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_SWIST", g_iSettings[c_szPrefix], id);
 			flNextTime[id] = get_gametime() + 20.0;
 		}
 
@@ -379,13 +411,13 @@ public fwdEmitSound(id, iChannel, szSample[], Float:volume, Float:attenuation, f
 
 public fwdClientKill(id) {
 	if (g_iCurrentMode == MODE_DEATHMATCH) {
-		client_print_color(id, print_team_blue, "%L", id, "MAIN_KILL_NOT", g_pCvar[c_szPrefix]);
+		client_print_color(id, print_team_blue, "%L", id, "MAIN_KILL_NOT", g_iSettings[c_szPrefix]);
 		return FMRES_SUPERCEDE;
 	} else if (rg_get_remaining_time() > 60.0) {
-		client_print_color(id, print_team_blue, "%L", id, "MAIN_KILL_WAIT", g_pCvar[c_szPrefix]);
+		client_print_color(id, print_team_blue, "%L", id, "MAIN_KILL_WAIT", g_iSettings[c_szPrefix]);
 		return FMRES_SUPERCEDE;
 	} else {
-		client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_KILL", g_pCvar[c_szPrefix], id);
+		client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_KILL", g_iSettings[c_szPrefix], id);
 	}
 	return FMRES_IGNORED;
 }
@@ -415,19 +447,19 @@ stock setUserRole(id) {
 			rg_set_user_footsteps(id, true);
 			rg_give_item(id, "weapon_knife");
 
-			if (g_pCvar[c_iHe]) {
+			if (g_iSettings[c_iHe]) {
 				rg_give_item(id, "weapon_hegrenade");
-				rg_set_user_bpammo(id, WEAPON_HEGRENADE, g_pCvar[c_iHe]);
+				rg_set_user_bpammo(id, WEAPON_HEGRENADE, g_iSettings[c_iHe]);
 			}
 
-			if (g_pCvar[c_iFlash]) {
+			if (g_iSettings[c_iFlash]) {
 				rg_give_item(id, "weapon_flashbang");
-				rg_set_user_bpammo(id, WEAPON_FLASHBANG, g_pCvar[c_iFlash]);
+				rg_set_user_bpammo(id, WEAPON_FLASHBANG, g_iSettings[c_iFlash]);
 			}
 
-			if (g_pCvar[c_iSmoke]) {
+			if (g_iSettings[c_iSmoke]) {
 				rg_give_item(id, "weapon_smokegrenade");
-				rg_set_user_bpammo(id, WEAPON_SMOKEGRENADE, g_pCvar[c_iSmoke]);
+				rg_set_user_bpammo(id, WEAPON_SMOKEGRENADE, g_iSettings[c_iSmoke]);
 			}
 		}
 		case TEAM_CT: {
@@ -456,16 +488,12 @@ public hns_set_mode(iCurrentMode) {
 			set_pcvar_float(_:g_Roundtime, 0.0);
 			set_cvar_num("mp_roundrespawn_time", -1);
 			set_cvar_num("mp_round_infinite", 1);
-			
-			set_cvar_num("hns_deathmatch", 1); // Переделать
 		}
 		case MODE_PUBLIC: {
 			set_cvar_num("mp_freezetime", 5);
-			set_pcvar_float(_:g_Roundtime, Float:g_pCvar[c_flRoundTime]);
+			set_pcvar_float(_:g_Roundtime, Float:g_iSettings[c_flRoundTime]);
 			set_cvar_num("mp_roundrespawn_time", 20);
 			set_cvar_num("mp_round_infinite", 0);
-		
-			set_cvar_num("hns_deathmatch", 0); // Переделать
 		}
 	}
 
