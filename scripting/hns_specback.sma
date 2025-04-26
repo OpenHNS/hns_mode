@@ -1,14 +1,21 @@
 #include <amxmodx>
+#include <amxmisc>
 #include <reapi>
 #include <hns_mode_main>
 
 new bool:g_bSpec[MAX_PLAYERS + 1];
 new TeamName:g_iTeam[MAX_PLAYERS + 1];
 
+new TeamName:g_eSpecBack[MAX_PLAYERS + 1];
+
 public plugin_init() {
 	register_plugin("HNS: Spec back", "1.0.0", "OpenHNS");
 
 	RegisterSayCmd("spec", "back", "SpecBack", 0, "Spec/Back");
+}
+
+public client_disconnected(id) {
+	g_eSpecBack[id] = TEAM_UNASSIGNED;
 }
 
 public hns_team_swap() {
@@ -23,27 +30,28 @@ public hns_team_swap() {
 }
 
 public SpecBack(id) {
-	g_bSpec[id] = !g_bSpec[id];
-
-	if (g_bSpec[id]) {
-		if (rg_get_user_team(id) == TEAM_SPECTATOR) {
-			g_bSpec[id] = false;
-			return;
+	if (rg_get_user_team(id) == TEAM_SPECTATOR) {
+		new iNumTT = get_playersnum_ex(GetPlayers_MatchTeam, "TERRORIST");
+		new iNumCT = get_playersnum_ex(GetPlayers_MatchTeam, "CT");
+		
+		if (iNumTT == iNumCT && g_eSpecBack[id] != TEAM_UNASSIGNED) {
+			rg_set_user_team(id, g_eSpecBack[id]);
+		} else if (iNumTT < iNumCT) {
+			rg_set_user_team(id, TEAM_TERRORIST);
+		} else {
+			rg_set_user_team(id, TEAM_CT);
 		}
 
-		g_iTeam[id] = rg_get_user_team(id);
-		TransferToSpec(id);
-	} else {
-		if (rg_get_user_team(id) != TEAM_SPECTATOR) {
-			g_bSpec[id] = true;
-			return;
-		}
-
-		rg_set_user_team(id, g_iTeam[id]);
-
-		if (hns_get_mode() == MODE_DEATHMATCH) {
+		if (hns_get_mode() == MODE_PUBLIC) {
+			if (rg_is_player_can_respawn(id)) {
+				rg_round_respawn(id);
+			}
+		} else {
 			rg_round_respawn(id);
 		}
+	} else {
+		g_eSpecBack[id] = rg_get_user_team(id);
+		TransferToSpec(id);
 	}
 }
 

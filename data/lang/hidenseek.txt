@@ -27,7 +27,8 @@ NIGHT_STOP = [^3%s^1] The night deathmatch has been ^3stopped^1.
 ROUNDINFO_ON = [^3%s^1] Round info is now ^3enabled^1.
 ROUNDINFO_OFF = [^3%s^1] Round info is now ^3disabled^1.
 
-HNS_OWNAGE = %n owned %n's head!
+HNS_OWNAGE = %n owned %n's head! 
+HNS_OWNAGE_COUNT = %n owned %n's head! [#%d]
 
 HNS_YES = Yes
 HNS_NO = No
@@ -62,6 +63,7 @@ ROUNDINFO_ON = [^3%s^1] Информация о раунде ^3включена^
 ROUNDINFO_OFF = [^3%s^1] Информация о раунде ^3выключена^1.
 
 HNS_OWNAGE = %n запрыгнул на голову %n!
+HNS_OWNAGE_COUNT = %n запрыгнул на голову %n! [#%d]
 
 HNS_YES = Да
 HNS_NO = Нет
