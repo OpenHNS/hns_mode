@@ -8,10 +8,27 @@ new TeamName:g_iTeam[MAX_PLAYERS + 1];
 
 new TeamName:g_eSpecBack[MAX_PLAYERS + 1];
 
+new g_szPrefix[24];
+
 public plugin_init() {
-	register_plugin("HNS: Spec back", "1.0.0", "OpenHNS");
+	register_plugin("HNS: Spec back", "1.1", "OpenHNS");
+
+	register_clcmd("chooseteam", "TeamMenuBlock");
 
 	RegisterSayCmd("spec", "back", "SpecBack", 0, "Spec/Back");
+
+	register_dictionary("hidenseek.txt");
+}
+
+public plugin_cfg() {
+	hns_get_prefix(g_szPrefix, charsmax(g_szPrefix));
+}
+
+public plugin_natives() {
+	register_native("hns_specback_init", "native_specback_init");
+}
+public native_specback_init(amxx, params) {
+	return 1;
 }
 
 public client_disconnected(id) {
@@ -27,6 +44,41 @@ public hns_team_swap() {
 				g_iTeam[i] = TEAM_CT;
 		}
 	}
+}
+
+public TeamMenuBlock(id) {
+	SpecBackMenu(id);
+
+	return PLUGIN_HANDLED;
+}
+
+public SpecBackMenu(id) {
+	new szMsg[64];
+	formatex(szMsg, charsmax(szMsg), "%L", LANG_PLAYER, "SPECBACK_MENU");
+	new hMenu = menu_create(szMsg, "SpecBackMenuHandler");
+
+	if (rg_get_user_team(id) == TEAM_TERRORIST || rg_get_user_team(id) == TEAM_CT) {
+		formatex(szMsg, charsmax(szMsg), "%L", LANG_PLAYER, "SPECBACK_SPEC");
+	} else {
+		formatex(szMsg, charsmax(szMsg), "%L", LANG_PLAYER, "SPECBACK_BACK");
+	}
+
+	menu_additem(hMenu, szMsg, "1");
+
+	menu_display(id, hMenu, 0);
+}
+
+public SpecBackMenuHandler(id, hMenu, item) {
+	if (item == MENU_EXIT) {
+		menu_destroy(hMenu);
+		return PLUGIN_HANDLED;
+	}
+
+	menu_destroy(hMenu);
+
+	SpecBack(id);
+
+	return PLUGIN_HANDLED;
 }
 
 public SpecBack(id) {
@@ -49,9 +101,11 @@ public SpecBack(id) {
 		} else {
 			rg_round_respawn(id);
 		}
+		client_print_color(id, print_team_blue, "%L", id, "SPECBACK_CHAT_BACK", g_szPrefix, id);
 	} else {
 		g_eSpecBack[id] = rg_get_user_team(id);
 		TransferToSpec(id);
+		client_print_color(id, print_team_blue, "%L", id, "SPECBACK_CHAT_SPEC", g_szPrefix, id);
 	}
 }
 

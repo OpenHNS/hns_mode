@@ -5,6 +5,8 @@
 
 #define rg_get_user_team(%0) get_member(%0, m_iTeam)
 
+native hns_specback_init();
+
 enum _:HNS_MODES {
 	MODE_PUBLIC = 0,
 	MODE_DEATHMATCH
@@ -56,9 +58,9 @@ enum _: Forwards_s {
 new g_hForwards[Forwards_s];
 
 public plugin_init() {
-	register_plugin("HNS Mode Main", "1.0.4.2", "OpenHNS");
+	register_plugin("HNS Mode Main", "1.0.4.3", "OpenHNS");
 
-	register_clcmd("chooseteam", "BlockCmd");
+	register_clcmd("chooseteam", "BlockTeamMenu");
 	register_clcmd("jointeam", "BlockCmd");
 	register_clcmd("joinclass", "BlockCmd");
 
@@ -149,6 +151,8 @@ public plugin_natives() {
 	
 	register_native("hns_get_mode", "native_get_mode");
 	register_native("hns_set_mode", "native_set_mode");
+
+	set_native_filter("native_filter");
 }
 
 public native_get_prefix(amxx, params) {
@@ -165,6 +169,14 @@ public native_get_mode(amxx, params) {
 public native_set_mode(amxx, params) {
 	enum { argMode = 1 };
 	hns_set_mode(get_param(argMode));
+}
+
+public native_filter(const szNativeName[], iNativeID, iTrapMode) {
+	if (equal(szNativeName, "hns_specback_init")) { 
+		return PLUGIN_HANDLED
+	}
+
+	return PLUGIN_CONTINUE;
 }
 
 public delayed_mode() {
@@ -184,6 +196,13 @@ public delayed_mode() {
 	} else {
 		hns_set_mode(MODE_PUBLIC);
 	}
+}
+
+public BlockTeamMenu(id) {
+	if (hns_specback_init()) {
+		return PLUGIN_CONTINUE;
+	}
+	return PLUGIN_HANDLED;
 }
 
 public BlockCmd(id) {
