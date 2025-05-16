@@ -7,6 +7,8 @@
 
 native hns_specback_init();
 
+native hns_shop_init();
+
 enum _:HNS_MODES {
 	MODE_PUBLIC = 0,
 	MODE_DEATHMATCH
@@ -52,13 +54,14 @@ new const g_szDefaultEntities[][] = {
 enum _: Forwards_s {
 	hns_round_start,
 	hns_team_swap,
-	hns_round_end
+	hns_round_end,
+	hns_cvars_init,
 };
 
 new g_hForwards[Forwards_s];
 
 public plugin_init() {
-	register_plugin("HNS Mode Main", "1.0.4.3", "OpenHNS");
+	register_plugin("HNS: Mode Main", "1.0.5", "OpenHNS");
 
 	register_clcmd("chooseteam", "BlockTeamMenu");
 	register_clcmd("jointeam", "BlockCmd");
@@ -120,21 +123,26 @@ public plugin_init() {
 
 	g_hForwards[hns_round_start] = CreateMultiForward("hns_round_start", ET_CONTINUE);
 	g_hForwards[hns_team_swap] = CreateMultiForward("hns_team_swap", ET_CONTINUE);
-	g_hForwards[hns_round_end] = CreateMultiForward("hns_round_end", ET_CONTINUE);
+	g_hForwards[hns_round_end] = CreateMultiForward("hns_round_end", ET_CONTINUE, FP_CELL);
+	g_hForwards[hns_cvars_init] = CreateMultiForward("hns_cvars_init", ET_CONTINUE);
 
 	register_dictionary("hidenseek.txt");
-}
 
-public plugin_cfg() {
 	new szPath[PLATFORM_MAX_PATH];
 	get_localinfo("amxx_configsdir", szPath, charsmax(szPath));
 	format(szPath, charsmax(szPath), "%s/%s", szPath, "hns_mode.cfg");
 	server_cmd("exec %s", szPath);
 }
 
-public plugin_precache() {
-	engfunc(EngFunc_CreateNamedEntity, engfunc(EngFunc_AllocString, "func_buyzone"));
+public plugin_cfg() {
+	ExecuteForward(g_hForwards[hns_cvars_init]);
+}
 
+public plugin_precache() {
+	if (!hns_shop_init()) {
+		engfunc(EngFunc_CreateNamedEntity, engfunc(EngFunc_AllocString, "func_buyzone"));
+	}
+	
 	precache_sound(g_szUseSound);
 	precache_sound(g_szUseSwist);
 
@@ -176,6 +184,10 @@ public native_filter(const szNativeName[], iNativeID, iTrapMode) {
 		return PLUGIN_HANDLED
 	}
 
+	if (equal(szNativeName, "hns_shop_init")) { 
+		return PLUGIN_HANDLED
+	}
+
 	return PLUGIN_CONTINUE;
 }
 
@@ -185,7 +197,9 @@ public delayed_mode() {
 	set_cvar_num("mp_forcecamera", 0);
 	set_cvar_num("mp_autoteambalance", 2);
 	set_cvar_num("sv_alltalk", 1);
-	set_cvar_num("mp_buytime", 0);
+	if (!hns_shop_init()) {
+		set_cvar_num("mp_buytime", 0);
+	}
 	set_cvar_num("mp_roundover", 2);
 	set_cvar_num("mp_give_player_c4", 0);
 	set_cvar_string("mp_t_default_weapons_secondary", "");
@@ -335,6 +349,8 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 		return HC_CONTINUE;
 	}
 
+	ExecuteForward(g_hForwards[hns_round_end], _, (status == WINSTATUS_TERRORISTS) ? 0 : 1);
+
 	static iWinsTT;
 
 	if (status == WINSTATUS_CTS) {
@@ -364,8 +380,6 @@ public rgRoundEnd(WinStatus: status, ScenarioEventEndRound: event, Float:tmDelay
 			iWinsTT = 0;
 		}
 	}
-
-	ExecuteForward(g_hForwards[hns_round_end]);
 
 	return HC_CONTINUE;
 }
@@ -445,7 +459,10 @@ public fwdSpawn(entid) {
 	static szClassName[32];
 	if (pev_valid(entid)) {
 		pev(entid, pev_classname, szClassName, 31);
-		if (equal(szClassName, "func_buyzone")) engfunc(EngFunc_RemoveEntity, entid);
+
+		if (!hns_shop_init()) {
+			if (equal(szClassName, "func_buyzone")) engfunc(EngFunc_RemoveEntity, entid);
+		}
 
 		for (new i = 0; i < sizeof g_szDefaultEntities; i++) {
 			if (equal(szClassName, g_szDefaultEntities[i])) {

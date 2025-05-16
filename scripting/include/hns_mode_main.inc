@@ -18,7 +18,14 @@ native hns_set_mode(iCurrentMode);
 
 forward hns_round_start();
 forward hns_team_swap();
-forward hns_round_end();
+forward hns_init_cvars();
+
+enum _:WIN_TEAM {
+	WIN_TT = 0,
+	WIN_CT
+}
+
+forward hns_cvars_init(iWinTeam);
 
 stock RegisterSayCmd(const szCmd[], const szShort[], const szFunc[], flags = -1, szInfo[] = "") {
 	new szTemp[65], szInfoLang[65];

@@ -22,7 +22,7 @@ public plugin_init()
 	set_task(0.6, "check_night");
 }
 
-public plugin_cfg() {
+public hns_cvars_init() {
 	hns_get_prefix(g_szPrefix, charsmax(g_szPrefix));
 }
 

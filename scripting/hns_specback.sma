@@ -20,13 +20,14 @@ public plugin_init() {
 	register_dictionary("hidenseek.txt");
 }
 
-public plugin_cfg() {
+public hns_cvars_init() {
 	hns_get_prefix(g_szPrefix, charsmax(g_szPrefix));
 }
 
 public plugin_natives() {
 	register_native("hns_specback_init", "native_specback_init");
 }
+
 public native_specback_init(amxx, params) {
 	return 1;
 }

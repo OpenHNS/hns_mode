@@ -8,10 +8,9 @@
 new g_szPrefix[24];
 
 enum _: PLAYER_STATS {
-	PLR_STATS_KILLS,
+	PLR_STATS_STABS,
 	PLR_STATS_DEATHS,
 	PLR_STATS_ASSISTS,
-	PLR_STATS_STABS,
 	PLR_STATS_DMG_CT,
 	PLR_STATS_DMG_TT,
 	Float:PLR_STATS_RUNNED,
@@ -34,7 +33,7 @@ new g_iSecShow;
 new g_HudSync;
 
 public plugin_init() {
-	register_plugin("HNS: Show round best players", "1.0", "OpenHNS");
+	register_plugin("HNS: Show round best players", "1.1", "OpenHNS");
 
 	RegisterSayCmd("roundinfo", "ri", "cmdRoundInfo", 0, "Show round info");
 
@@ -45,7 +44,7 @@ public client_putinserver(id) {
 	g_bRoundInfo[id] = true;
 }
 
-public plugin_cfg() {
+public hns_cvars_init() {
 	hns_get_prefix(g_szPrefix, charsmax(g_szPrefix));
 }
 
@@ -60,7 +59,7 @@ public cmdRoundInfo(id) {
 	return PLUGIN_HANDLED;
 }
 
-public hns_round_end() {
+public hns_apply_stats() {
 	new iPlayers[MAX_PLAYERS], iCTNum, iTTNum
 	get_players(iPlayers, iCTNum, "che", "CT");
 	get_players(iPlayers, iTTNum, "che", "TERRORIST");
@@ -95,10 +94,9 @@ public set_best_stats() {
 }
 
 public get_player_stats(id) {
-	g_StatsRound[id][PLR_STATS_KILLS] = hns_get_stats_kills(id);
+	g_StatsRound[id][PLR_STATS_STABS] = hns_get_stats_stabs(id);
 	g_StatsRound[id][PLR_STATS_DEATHS] = hns_get_stats_deaths(id);
 	g_StatsRound[id][PLR_STATS_ASSISTS] = hns_get_stats_assists(id);
-	g_StatsRound[id][PLR_STATS_STABS] = hns_get_stats_stabs(id);
 	g_StatsRound[id][PLR_STATS_DMG_CT] = hns_get_stats_dmgct(id);
 	g_StatsRound[id][PLR_STATS_DMG_TT] =  hns_get_stats_dmgtt(id);
 	g_StatsRound[id][PLR_STATS_RUNNED] = hns_get_stats_run(id);
@@ -114,10 +112,9 @@ public set_best_mess() {
 	fnConvertTime(g_eBestStats[PLR_STATS_SURVTIME], sTime, charsmax(sTime));
 	
 	if (g_eBestIndex[PLR_STATS_SURVTIME])	iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "Survived: %n - %s^n", g_eBestIndex[PLR_STATS_SURVTIME], sTime)
-	if (g_eBestIndex[PLR_STATS_OWNAGES])	iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "Ownages: %n - %d^n", g_eBestIndex[PLR_STATS_OWNAGES], g_eBestStats[PLR_STATS_OWNAGES])
-	if (g_eBestIndex[PLR_STATS_KILLS])		iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "Killed: %n - %d^n", g_eBestIndex[PLR_STATS_KILLS], g_eBestStats[PLR_STATS_KILLS])
-	if (g_eBestIndex[PLR_STATS_ASSISTS])	iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "Assists: %n - %d^n", g_eBestIndex[PLR_STATS_ASSISTS], g_eBestStats[PLR_STATS_ASSISTS])
 	if (g_eBestIndex[PLR_STATS_STABS])		iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "Stabs: %n - %d^n", g_eBestIndex[PLR_STATS_STABS], g_eBestStats[PLR_STATS_STABS])
+	if (g_eBestIndex[PLR_STATS_OWNAGES])	iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "Ownages: %n - %d^n", g_eBestIndex[PLR_STATS_OWNAGES], g_eBestStats[PLR_STATS_OWNAGES])
+	if (g_eBestIndex[PLR_STATS_ASSISTS])	iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "Assists: %n - %d^n", g_eBestIndex[PLR_STATS_ASSISTS], g_eBestStats[PLR_STATS_ASSISTS])
 	if (g_eBestIndex[PLR_STATS_DMG_CT])		iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "CT Dmg: %n - %d^n", g_eBestIndex[PLR_STATS_DMG_CT], g_eBestStats[PLR_STATS_DMG_CT])
 	if (g_eBestIndex[PLR_STATS_DMG_TT])		iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "TT Dmg: %n - %d^n", g_eBestIndex[PLR_STATS_DMG_TT], g_eBestStats[PLR_STATS_DMG_TT])
 	if (g_eBestIndex[PLR_STATS_RUNNED])		iLen += format(g_szMess[iLen], sizeof g_szMess - iLen, "Runned: %n - %.2f^n", g_eBestIndex[PLR_STATS_RUNNED], g_eBestStats[PLR_STATS_RUNNED])
