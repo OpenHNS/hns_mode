@@ -159,8 +159,16 @@ public hns_cvars_init() {
 }
 
 public hns_apply_stats(iWinTeam) {
+	if (hns_get_mode() != MODE_PUBLIC) {
+		return;
+	}
+
 	new iPlayers[MAX_PLAYERS], iNum;
 	get_players(iPlayers, iNum, "ch");
+
+	if (iNum <= 2) {
+		return;
+	}
 
 	for (new i = 0; i < iNum; i++) {
 		new id = iPlayers[i];
@@ -232,17 +240,13 @@ public plugin_natives() {
 public native_rank_get_rank(amxx, params) {
 	enum { id = 1 };
 
-	if (g_bDebugMode) server_print("[HNS_RANK] native_rank_get_rank(%n) return %d", get_param(id), g_eRankData[id][HNS_RANK])
-
-	return g_eRankData[id][HNS_RANK];
+	return g_eRankData[get_param(id)][HNS_RANK];
 }
 
 public native_rank_get_exp(amxx, params) {
 	enum { id = 1 };
 
-	if (g_bDebugMode) server_print("[HNS_RANK] native_rank_get_exp(%n) return %d", get_param(id), g_eRankData[id][RANK_EXP])
-
-	return g_eRankData[id][RANK_EXP];
+	return g_eRankData[get_param(id)][RANK_EXP];
 }
 
 public rgSetClientUserInfoName(id, infobuffer[], szNewName[]) {
@@ -321,7 +325,7 @@ public QueryHandler(iFailState, Handle:hQuery, szError[], iErrnum, cData[], iSiz
 				new szNewName[MAX_NAME_LENGTH];
 				new szNewNameSQL[MAX_NAME_LENGTH * 2]
 				get_user_name(id, szNewName, charsmax(szNewName));
-				SQL_QuoteString(Empty_Handle, szNewNameSQL, charsmax(szNewNameSQL), fmt("%s", szNewNameSQL));
+				SQL_QuoteString(Empty_Handle, szNewNameSQL, charsmax(szNewNameSQL), fmt("%s", szNewName));
 
 				new szOldName[MAX_NAME_LENGTH];
 				SQL_ReadResult(hQuery, index_name, szOldName, charsmax(szOldName));
