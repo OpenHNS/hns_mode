@@ -3,11 +3,13 @@
 #include <hamsandwich>
 #include <reapi>
 
-#define rg_get_user_team(%0) get_member(%0, m_iTeam)
-
 native hns_specback_init();
 
 native hns_shop_init();
+
+#include <hns_mode_filter>
+
+#define rg_get_user_team(%0) get_member(%0, m_iTeam)
 
 enum _:HNS_MODES {
 	MODE_PUBLIC = 0,
@@ -160,7 +162,7 @@ public plugin_natives() {
 	register_native("hns_get_mode", "native_get_mode");
 	register_native("hns_set_mode", "native_set_mode");
 
-	set_native_filter("native_filter");
+	set_native_filter("hns_mode_additons");
 }
 
 public native_get_prefix(amxx, params) {
@@ -177,18 +179,6 @@ public native_get_mode(amxx, params) {
 public native_set_mode(amxx, params) {
 	enum { argMode = 1 };
 	hns_set_mode(get_param(argMode));
-}
-
-public native_filter(const szNativeName[], iNativeID, iTrapMode) {
-	if (equal(szNativeName, "hns_specback_init")) { 
-		return PLUGIN_HANDLED
-	}
-
-	if (equal(szNativeName, "hns_shop_init")) { 
-		return PLUGIN_HANDLED
-	}
-
-	return PLUGIN_CONTINUE;
 }
 
 public delayed_mode() {

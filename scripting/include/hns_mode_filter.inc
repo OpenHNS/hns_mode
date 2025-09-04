@@ -1,47 +1,27 @@
-#if defined _hns_matchsystem_filter_included
+#if defined _hns_mode_filter_included
 	#endinput
 #endif
-#define _hns_matchsystem_filter_included
+#define _hns_mode_filter_included
 
 
-public match_system_additons(const szNativeName[], iNativeID, iTrapMode) {
-	if (equal(szNativeName, "hns_mysql_stats_init")) { 
+public hns_mode_additons(const szNativeName[], iNativeID, iTrapMode) {
+	if (equal(szNativeName, "hns_specback_init")) { 
 		return PLUGIN_HANDLED
 	}
 
-	if (equal(szNativeName, "hns_mysql_stats_data")) { 
-		return PLUGIN_HANDLED
-	}
-	
-	if (equal(szNativeName, "hns_mysql_stats_get_ownage")) { 
+	if (equal(szNativeName, "hns_rank_get_rank")) { 
 		return PLUGIN_HANDLED
 	}
 
-	if (equal(szNativeName, "hns_mysql_stats_set_ownage")) { 
+	if (equal(szNativeName, "hns_rank_get_exp")) { 
 		return PLUGIN_HANDLED
 	}
 
-	if (equal(szNativeName, "hns_api_stats_init")) { 
+	if (equal(szNativeName, "hns_rank_get_top")) { 
 		return PLUGIN_HANDLED
 	}
 
-	if (equal(szNativeName, "hns_api_stats_place")) { 
-		return PLUGIN_HANDLED
-	}
-
-	if (equal(szNativeName, "hns_api_stats_rating")) { 
-		return PLUGIN_HANDLED
-	}
-
-	if (equal(szNativeName, "hns_api_stats_rank")) { 
-		return PLUGIN_HANDLED
-	}
-
-	if (equal(szNativeName, "hnsmatch_maps_init")) { 
-		return PLUGIN_HANDLED
-	}
-
-	if (equal(szNativeName, "hnsmatch_maps_is_knife")) { 
+	if (equal(szNativeName, "hns_shop_init")) { 
 		return PLUGIN_HANDLED
 	}
 
