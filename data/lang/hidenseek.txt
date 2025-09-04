@@ -27,6 +27,9 @@ NIGHT_STOP = [^3%s^1] The night deathmatch has been ^3stopped^1.
 ROUNDINFO_ON = [^3%s^1] Round info is now ^3enabled^1.
 ROUNDINFO_OFF = [^3%s^1] Round info is now ^3disabled^1.
 
+PLAYERINFO_ON = [^3%s^1] Player info is now ^3enabled^1.
+PLAYERINFO_OFF = [^3%s^1] Player info is now ^3disabled^1.
+
 SPECBACK_MENU = \rTeam menu:
 SPECBACK_SPEC = Join to spec
 SPECBACK_BACK = Join the game
@@ -67,6 +70,9 @@ NIGHT_STOP = [^3%s^1] Остановился ночной ^3deathmatch^1.
 
 ROUNDINFO_ON = [^3%s^1] Информация о раунде ^3включена^1.
 ROUNDINFO_OFF = [^3%s^1] Информация о раунде ^3выключена^1.
+
+PLAYERINFO_ON = [^3%s^1] Информация о игроках ^3включена^1.
+PLAYERINFO_OFF = [^3%s^1] Информация о игроках ^3выключена^1.
 
 SPECBACK_MENU = \rМеню команды:
 SPECBACK_SPEC = Войти за наблюдателей

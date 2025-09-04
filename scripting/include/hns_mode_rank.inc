@@ -20,3 +20,12 @@ native hns_rank_get_rank(id);
 * @return exp num
 */
 native hns_rank_get_exp(id);
+
+/*
+* Gets player top.
+*
+* @param id Client index
+*
+* @return top num
+*/
+native hns_rank_get_top(id);
