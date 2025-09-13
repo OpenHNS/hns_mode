@@ -9,6 +9,8 @@ native hns_shop_init();
 
 #include <hns_mode_filter>
 
+forward hns_player_idle(const id);
+
 #define rg_get_user_team(%0) get_member(%0, m_iTeam)
 
 enum _:HNS_MODES {
@@ -238,6 +240,10 @@ public rgPlayerSpawn(id) {
 
 	if (g_iCurrentMode == MODE_DEATHMATCH)
 		checkBalanceTeams();
+}
+
+public hns_player_idle(const id) {
+	if (g_iCurrentMode == MODE_DEATHMATCH) checkBalanceTeams();
 }
 
 public checkBalanceTeams() {

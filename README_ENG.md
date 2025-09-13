@@ -50,12 +50,13 @@ Hide'N'Seek - For the most part a catch-up game. The CT team catches up with the
 | :-: | :-: | :-: |
 | hns_deathmatch| 0 | deathmatch mod `1` Enable / `0` Disable |
 | hns_respawn | 3 | Number of seconds to revive players in DM mode |
-| | hns_he | 0 | HE number of grenades on TT team |
+| hns_he | 0 | HE number of grenades on TT team |
 | hns_flash | 2 | Qty of Flash grenades on TT team |
 | hns_smoke | 1 | Qty of Smoke grenades on the TT |
 | hns_swap_team | 2 | Number of consecutive rounds won by the TT team after which to swap teams |
 | hns_swist | 1 | whistle (+USE) on TT team `1` Enable / `0` Disable |
 | hns_prefix | HNS | chat message prefix
+| hns_max_idle_period | 15.0 | Maximum idle period |
 
 ## Plugins
 
