@@ -103,6 +103,7 @@ public plugin_init() {
 
 	RegisterHookChain(RG_CSGameRules_OnRoundFreezeEnd, "rgFreezeEnd", true);
 	RegisterHookChain(RG_CSGameRules_RestartRound, "rgRoundStart", true);
+	RegisterHookChain(RG_CSGameRules_FlPlayerFallDamage, "rgFlPlayerFallDamage", true);
 	RegisterHookChain(RG_CBasePlayer_ResetMaxSpeed, "rgPlayerResetMaxSpeed", true);
 	RegisterHookChain(RG_CBasePlayer_Spawn, "rgPlayerSpawn", true);
 	RegisterHookChain(RG_CBasePlayer_Killed, "rgPlayerKilled", true);
@@ -225,6 +226,26 @@ public rgRoundStart() {
 	ExecuteForward(g_hForwards[hns_round_start]);
 }
 
+public rgFlPlayerFallDamage(const id) {
+	if (g_iCurrentMode != MODE_DEATHMATCH)
+		return HC_CONTINUE;
+
+	new Float:flDmg = Float:GetHookChainReturn(ATYPE_FLOAT);
+
+	new Float:flHp;
+	get_entvar(id, var_health, flHp);
+
+	if (flHp > flDmg) {
+		return HC_CONTINUE;
+	}
+
+	if (rg_get_user_team(id) == TEAM_TERRORIST) {
+		LuckyTransferToTT(id);
+	}
+
+	return HC_CONTINUE;
+}
+
 public rgPlayerResetMaxSpeed(id) {
 	if (get_member_game(m_bFreezePeriod)) {
 		if (rg_get_user_team(id) == TEAM_TERRORIST) {
@@ -274,25 +295,25 @@ public checkBalanceTeams() {
 	return PLUGIN_HANDLED;
 }
 
+// client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_TT", g_iSettings[c_szPrefix], iLucky)
 public rgPlayerKilled(victim, attacker) {
 	if (g_iCurrentMode != MODE_DEATHMATCH)
 		return HC_CONTINUE;
 
-	if (attacker == 0 || !is_user_connected(attacker)) {
-		if (rg_get_user_team(victim) == TEAM_TERRORIST) {
-			new iLucky = getRandomAlivePlayer(TEAM_CT);
-			if (iLucky) {
-				rg_set_user_team(iLucky, TEAM_TERRORIST);
-				client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_TT", g_iSettings[c_szPrefix], iLucky)
+	if (attacker != victim) {
+		if (is_user_connected(attacker)) {
+			if (rg_get_user_team(attacker) == TEAM_CT) {
+				rg_set_user_team(attacker, TEAM_TERRORIST);
 				rg_set_user_team(victim, TEAM_CT);
-				setUserRole(iLucky);
+				
+				setUserRole(attacker);
+			}
+		} else {
+			new DeadVictim = get_entvar(victim, var_health, 0.0);
+			if (DeadVictim) {
+				LuckyTransferToTT(victim);
 			}
 		}
-	} else if (attacker != victim && rg_get_user_team(attacker) == TEAM_CT) {
-		rg_set_user_team(attacker, TEAM_TERRORIST);
-		rg_set_user_team(victim, TEAM_CT);
-
-		setUserRole(attacker);
 	}
 
 	set_task(float(g_iSettings[c_iDmRespawn]), "taskRespawnPlayer", victim);
@@ -501,6 +522,30 @@ stock setUserRole(id) {
 	}
 
 	return PLUGIN_HANDLED;
+}
+
+stock LuckyTransferToTT(id) {
+	if (!is_user_connected(id))
+		return;
+
+	new lucky = GetRandomCT();
+	if (lucky) {
+		rg_set_user_team(lucky, TEAM_TERRORIST);
+		client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "MAIN_TRANSFER_TT", g_iSettings[c_szPrefix], lucky)
+		rg_set_user_team(id, TEAM_CT);
+
+		setUserRole(lucky);
+	}
+}
+
+GetRandomCT() {
+	static iPlayers[32], iCTNum
+	get_players(iPlayers, iCTNum, "ache", "CT");
+
+	if (!iCTNum)
+		return 0
+
+	return iCTNum > 1 ? iPlayers[random(iCTNum)] : iPlayers[iCTNum - 1];
 }
 
 // Albertio
