@@ -38,9 +38,7 @@ public plugin_cfg() {
 }
 
 public plugin_init() {
-	register_plugin ("HNS: Additons for mode", "1.2", "OpenHNS");
-
-	//TODO: Добавить квары в семейство мода
+	register_plugin ("Additons for HNS", "1.2", "OpenHNS");
 
 	g_eCvar[c_iEnableBFITH] = create_cvar("hns_enable_block_fith", "1", FCVAR_NONE, "Enable block 'Fire in the hole!'", true, 0.0, true, 1.0);
 	bind_pcvar_num(g_eCvar[c_iEnableBFITH], g_iSettings[c_iEnableBFITH]);
@@ -60,11 +58,11 @@ public plugin_init() {
 	g_eFlashColor[green] = str_to_float(szGreen);
 	g_eFlashColor[blue]  = str_to_float(szBlue);
 
-	RegisterHam( Ham_Weapon_SecondaryAttack, "weapon_smokegrenade", "Weapon_SecondaryAttack_Pre", false );
-	RegisterHam( Ham_Weapon_SecondaryAttack, "weapon_flashbang", "Weapon_SecondaryAttack_Pre", false );
-	RegisterHam( Ham_Weapon_SecondaryAttack, "weapon_hegrenade", "Weapon_SecondaryAttack_Pre", false );
+	// RegisterHam( Ham_Weapon_SecondaryAttack, "weapon_smokegrenade", "Weapon_SecondaryAttack_Pre", false );
+	// RegisterHam( Ham_Weapon_SecondaryAttack, "weapon_flashbang", "Weapon_SecondaryAttack_Pre", false );
+	// RegisterHam( Ham_Weapon_SecondaryAttack, "weapon_hegrenade", "Weapon_SecondaryAttack_Pre", false );
 
-	RegisterHookChain(RG_CBasePlayer_ThrowGrenade, "CBasePlayer_ThrowGrenade_Post", true);
+	// RegisterHookChain(RG_CBasePlayer_ThrowGrenade, "CBasePlayer_ThrowGrenade_Post", true);
 	RegisterHookChain(RG_CBasePlayer_Radio, "rgBasePlayerRadio", .post = false);
 	RegisterHookChain(RG_PlayerBlind, "rgPlayerBlind");
 
@@ -75,8 +73,11 @@ public plugin_init() {
 	register_clcmd("amx_voteban",	"cmdBlock");
 	register_clcmd("amx_votekick",	"cmdBlock");
 	register_clcmd("amx_votemap",	"cmdBlock");
+	register_clcmd("votemap",		"cmdBlock");
 	register_clcmd("amx_pause",		"cmdBlock");
 	register_clcmd("rcon_password", "cmdBlock");
+
+	set_msg_block( get_user_msgid( "ClCorpse" ), BLOCK_SET );
 }
 
 public Weapon_SecondaryAttack_Pre( weapon ) {
