@@ -1,3 +1,4 @@
+// Переделать логику ночного дма
 #include <amxmodx>
 #include <hns_mode_main>
 

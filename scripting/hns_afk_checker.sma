@@ -1,3 +1,4 @@
+// TODO: Переделать логику афк чекера
 #include <amxmodx>
 #include <reapi>
 #include <hns_mode_main>

@@ -1,3 +1,5 @@
+//TODO: Актуализировать новую стату
+
 #include <amxmodx>
 
 #include <hns_mode_main>

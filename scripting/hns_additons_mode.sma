@@ -38,7 +38,7 @@ public plugin_cfg() {
 }
 
 public plugin_init() {
-	register_plugin ("Additons for HNS", "1.2", "OpenHNS");
+	register_plugin ("HNS: Additons for HNS", "1.2", "OpenHNS");
 
 	g_eCvar[c_iEnableBFITH] = create_cvar("hns_enable_block_fith", "1", FCVAR_NONE, "Enable block 'Fire in the hole!'", true, 0.0, true, 1.0);
 	bind_pcvar_num(g_eCvar[c_iEnableBFITH], g_iSettings[c_iEnableBFITH]);
