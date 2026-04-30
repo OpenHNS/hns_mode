@@ -1,4 +1,3 @@
-// Переделать логику ночного дма
 #include <amxmodx>
 #include <hns_mode_main>
 
@@ -20,7 +19,8 @@ public plugin_init()
 	bind_pcvar_num(register_cvar("hns_start_night", "23"), 	g_pCvar[c_iStartNight]);
 	bind_pcvar_num(register_cvar("hns_end_night", "9"),		g_pCvar[c_iEndNight]);
 
-	set_task(0.6, "check_night");
+	check_night();
+	set_task(60.0, "check_night", .flags = "b");
 }
 
 public hns_cvars_init() {
@@ -28,33 +28,35 @@ public hns_cvars_init() {
 }
 
 public check_night() {
-	if (isNight()) {
-		hns_set_mode(MODE_DEATHMATCH);
-		g_bNight = true;
-	} else {
-		hns_set_mode(MODE_PUBLIC);
-		g_bNight = false;
-	}
-}
+	new bool:bNowNight = isNight();
 
-public hns_round_start() {
-	if (isNight() && !g_bNight) {
+	if (bNowNight && !g_bNight) {
 		hns_set_mode(MODE_DEATHMATCH);
 		client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "NIGHT_START", g_szPrefix);
 		g_bNight = true;
-	} else if (!isNight() && g_bNight) {
+	} else if (!bNowNight && g_bNight) {
 		hns_set_mode(MODE_PUBLIC);
 		client_print_color(0, print_team_blue, "%L", LANG_PLAYER, "NIGHT_STOP", g_szPrefix);
 		g_bNight = false;
 	}
 }
 
+public hns_round_start() {
+	check_night();
+}
+
 public bool:isNight() {
 	static iNumChas; time(iNumChas);
+	new iStart = clamp(g_pCvar[c_iStartNight], 0, 23);
+	new iEnd = clamp(g_pCvar[c_iEndNight], 0, 23);
 
-	if (g_pCvar[c_iStartNight] > g_pCvar[c_iEndNight]) {
-		return (iNumChas >= g_pCvar[c_iStartNight] || iNumChas < g_pCvar[c_iEndNight]) ? true : false;
-	} else {
-		return (g_pCvar[c_iStartNight] <= iNumChas < g_pCvar[c_iEndNight]) ? true : false;
-	} 
+	if (iStart == iEnd) {
+		return false;
+	}
+
+	if (iStart > iEnd) {
+		return (iNumChas >= iStart || iNumChas < iEnd);
+	}
+
+	return (iNumChas >= iStart && iNumChas < iEnd);
 }
