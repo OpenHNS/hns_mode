@@ -1,13 +1,11 @@
-#include amxmodx
-#include amxmisc
-#include reapi
-#include xs
-#include time
+#include <amxmodx>
+#include <amxmisc>
+#include <reapi>
+#include <xs>
+#include <time>
 
-// Create cvar config in 'configs/plugins' and run it?
-//
-// Создавать конфиг с кварами в 'configs/plugins', и запускать его?
-#define AUTO_CFG
+#define TASKID_RESET_SKIP 1337
+#define TASKID_DELAY_TRANSFER 1338
 
 // Support for ECD Helper. Comment to disable.
 //
@@ -20,14 +18,8 @@
 
 #define IsInGame(%0) (TEAM_SPECTATOR > get_member(%0, m_iTeam) > TEAM_UNASSIGNED)
 
-stock const SOUND__TUTOR_MSG[] = "sound/events/tutor_msg.wav"
+stock const SOUND_TUTOR_MSG[] = "sound/events/tutor_msg.wav"
 
-const MENU_KEYS = MENU_KEY_1
-
-new const MENU_IDENT_STRING[] = "AfkMenu"
-
-const TASKID__RESET_SKIP = 1337
-const TASKID__DELAY_TRANSFER = 1338
 
 #if defined ECD_HELPER_SUPPORT
 	/**
@@ -41,25 +33,16 @@ const TASKID__DELAY_TRANSFER = 1338
 #endif
 
 enum _:CVAR_ENUM {
-	Float:CVAR_F__CHECK_INTERVAL,
-	Float:CVAR_F__WARN_TIME,
-	CVAR__WARN_TO_WARN,
-	CVAR__MAX_WARNS,
-	CVAR__MAX_KILLED_WARNS,
-	CVAR__FREE_SLOTS_TO_KICK_SPEC,
-	CVAR__NOTICE_SPEC,
-	CVAR__NOTICE_KICK,
-	CVAR__SPEC_TRANSFER_FLAG[32],
-	CVAR__SPECTATOR_TIME_FLAG[32],
-	CVAR__MAX_SPEC_TIME_DEFAULT,
-	CVAR__MAX_SPEC_TIME_FLAG,
-	CVAR__MENU_TIME,
-	Float:CVAR_F__TIME_SKIP_CHECK,
-	Float:CVAR_F__MAXSPEED
+	Float:CVAR_F_CHECK_INTERVAL,
+	Float:CVAR_F_WARN_TIME,
+	CVAR_WARN_TO_WARN,
+	CVAR_MAX_WARNS,
+	CVAR_MAX_KILLED_WARNS,
+	Float:CVAR_F_MAXSPEED
 }
 
-new g_eCvar[CVAR_ENUM], Float:g_fConnectTime[MAX_PLAYERS + 1], Float:g_fSpecStartTime[MAX_PLAYERS + 1]
-new g_iMenuID, g_szMenu[MAX_MENU_LENGTH], g_iMaxPlayers
+new g_eCvar[CVAR_ENUM]
+new g_pCvar[CVAR_ENUM]
 new g_iTimerWarns[MAX_PLAYERS + 1], g_iKilledWarns[MAX_PLAYERS + 1], g_bitPlToSkip, bool:g_bOnGround[MAX_PLAYERS + 1]
 new g_iSpawnOrigin[MAX_PLAYERS + 1][3]
 
@@ -67,124 +50,38 @@ public plugin_init() {
 	register_plugin("HNS: AFK Control", "DEV", "OpenHNS") // Fork mx?! plugin afk control
 	register_dictionary("afk_control.txt")
 
-	func_RegCvars()
+	g_pCvar[CVAR_F_CHECK_INTERVAL] = create_cvar("afk_time_check", "10", FCVAR_NONE, "Interval between checks (in seconds)", true, 1.0)
+	bind_pcvar_float(g_pCvar[CVAR_F_CHECK_INTERVAL], g_eCvar[CVAR_F_CHECK_INTERVAL])
 
-	g_iMaxPlayers = get_maxplayers()
+	g_pCvar[CVAR_F_WARN_TIME] = create_cvar("afk_warn_time", "10", FCVAR_NONE, "If the player does not move # seconds, this counts as AFK", true, 1.0)
+	bind_pcvar_float(g_pCvar[CVAR_F_WARN_TIME], g_eCvar[CVAR_F_WARN_TIME])
 
+	g_pCvar[CVAR_WARN_TO_WARN] = create_cvar("afk_warn_to_warn", "2", FCVAR_NONE, "On which # AFK warning should we notify about punishment? (0 - disable)", true, 0.0)
+	bind_pcvar_num(g_pCvar[CVAR_WARN_TO_WARN], g_eCvar[CVAR_WARN_TO_WARN])
+
+	g_pCvar[CVAR_MAX_WARNS] = create_cvar("afk_max_warns", "3", FCVAR_NONE, "After how many timer warnings player will be moved to spectators", true, 0.0)
+	bind_pcvar_num(g_pCvar[CVAR_MAX_WARNS], g_eCvar[CVAR_MAX_WARNS])
+
+	g_pCvar[CVAR_MAX_KILLED_WARNS] = create_cvar("afk_max_killed_warns", "3", FCVAR_NONE, "How many deaths at spawn are required to punish for AFK (0 - off)", true, 0.0)
+	bind_pcvar_num(g_pCvar[CVAR_MAX_KILLED_WARNS], g_eCvar[CVAR_MAX_KILLED_WARNS])
+
+	bind_pcvar_float(get_cvar_pointer("sv_maxspeed"), g_eCvar[CVAR_F_MAXSPEED])
+	
 	RegisterHookChain(RG_CBasePlayer_GetIntoGame, "CBasePlayer_GetIntoGame_Post", true)
 	RegisterHookChain(RG_CBasePlayer_Spawn, "CBasePlayer_Spawn_Pre", true)
 	RegisterHookChain(RG_CBasePlayer_Killed, "CBasePlayer_Killed_Pre")
-	RegisterHookChain(RG_CBasePlayer_StartObserver, "CBasePlayer_StartObserver_Post", true)
-	RegisterHookChain(RG_HandleMenu_ChooseTeam, "HandleMenu_ChooseTeam_Post", true)
-
-	g_iMenuID = register_menuid(MENU_IDENT_STRING)
-	register_menucmd(g_iMenuID, MENU_KEYS, "func_Menu_Handler")
 
 	set_task(3.5, "func_SetTask")
 }
 
-func_RegCvars() {
-	bind_cvar_float( "afk_time_check", "10",
-		.has_min = true, .min_val = 1.0,
-		.desc = "Интервал между проверками (в секундах)",
-		.bind = g_eCvar[CVAR_F__CHECK_INTERVAL]
-	);
-
-	bind_cvar_float( "afk_warn_time", "10",
-		.has_min = true, .min_val = 1.0,
-		.desc = "Если игрок не двигается # секунд, это считается за AFK",
-		.bind = g_eCvar[CVAR_F__WARN_TIME]
-	);
-
-	bind_cvar_num( "afk_warn_to_warn", "2",
-		.has_min = true, .min_val = 0.0,
-		.desc = "На каком # предупреждения за AFK отправить игроку предупреждение о наказании? (0 - не предупреждать)",
-		.bind = g_eCvar[CVAR__WARN_TO_WARN]
-	);
-
-	bind_cvar_num( "afk_max_warns", "3",
-		.has_min = true, .min_val = 0.0,
-		.desc = "Через сколько предупреждений по таймеру игрок будет переведён в зрители",
-		.bind = g_eCvar[CVAR__MAX_WARNS]
-	);
-
-	bind_cvar_num( "afk_max_killed_warns", "3",
-		.has_min = true, .min_val = 0.0,
-		.desc = "Сколько раз нужно умереть на точке спавна для того, чтобы произошло наказание за AFK (0 - выкл.)",
-		.bind = g_eCvar[CVAR__MAX_KILLED_WARNS]
-	);
-
-	bind_cvar_num( "afk_free_slots_to_kick_spec", "3",
-		.has_min = true, .min_val = -1.0,
-		.has_max = true, .max_val = 32.0,
-		.desc = "Когда на сервере остаётся # или менее свободных слотов, плагин будет пытаться кикать зрителей",
-		.bind = g_eCvar[CVAR__FREE_SLOTS_TO_KICK_SPEC]
-	);
-
-	bind_cvar_num( "afk_notice_spec", "1",
-		.has_min = true, .min_val = 0.0,
-		.has_max = true, .max_val = 1.0,
-		.desc = "Включить оповещение в чат о переводе игрока за наблюдателей",
-		.bind = g_eCvar[CVAR__NOTICE_SPEC]
-	);
-
-	bind_cvar_num( "afk_notice_kick", "1",
-		.has_min = true, .min_val = 0.0,
-		.has_max = true, .max_val = 1.0,
-		.desc = "Включить оповещение в чат о кике с сервера",
-		.bind = g_eCvar[CVAR__NOTICE_KICK]
-	);
-
-	bind_cvar_string( "afk_spec_transfer_flag", "abcdefghijklmnopqrstuvwxyz",
-		.desc = "Флаг, при наличии которого AFK-игрок сначала переводится в зрители (иначе кикается) (^"^" - кикать всех)",
-		.bind = g_eCvar[CVAR__SPEC_TRANSFER_FLAG],
-		.maxlen = charsmax(g_eCvar[CVAR__SPEC_TRANSFER_FLAG])
-	);
-
-	bind_cvar_string( "afk_spectator_time_flag", "",
-		.desc = "Флаг доступа для логики квара afk_max_spec_time_flag (^"^" - выкл.)",
-		.bind = g_eCvar[CVAR__SPECTATOR_TIME_FLAG],
-		.maxlen = charsmax(g_eCvar[CVAR__SPECTATOR_TIME_FLAG])
-	);
-
-	bind_cvar_num( "afk_max_spec_time_default", "60",
-		.has_min = true, .min_val = 0.0,
-		.desc = "Сколько секунд зритель без afk_spectator_time_flag может быть AFK до запроса активности (0 - без запроса)",
-		.bind = g_eCvar[CVAR__MAX_SPEC_TIME_DEFAULT]
-	);
-
-	bind_cvar_num( "afk_max_spec_time_flag", "300",
-		.has_min = true, .min_val = 0.0,
-		.desc = "Сколько секунд зритель с afk_spectator_time_flag может быть AFK до запроса активности (0 - без запроса)",
-		.bind = g_eCvar[CVAR__MAX_SPEC_TIME_FLAG]
-	);
-
-	bind_cvar_num( "afk_menu_time", "15",
-		.desc = "Сколько секунд даётся игроку на ответ на запрос активности (меню 'вы здесь?')",
-		.bind = g_eCvar[CVAR__MENU_TIME]
-	);
-
-	bind_cvar_float( "afk_time_skip_check", "20",
-		.has_min = true, .min_val = 0.0,
-		.desc = "Сколько секунд давать игроку на выбор команды после захода на сервер, до того, как начнётся проверка зрителя",
-		.bind = g_eCvar[CVAR_F__TIME_SKIP_CHECK]
-	);
-
-	bind_pcvar_float(get_cvar_pointer("sv_maxspeed"), g_eCvar[CVAR_F__MAXSPEED])
-
-#if defined AUTO_CFG
-	AutoExecConfig(/*.name = "PluginName"*/)
-#endif
-}
-
 public func_SetTask() {
-	set_task(g_eCvar[CVAR_F__CHECK_INTERVAL], "task_Check")
+	set_task(g_eCvar[CVAR_F_CHECK_INTERVAL], "task_Check")
 }
 
 public task_Check() {
 	func_SetTask()
 
-	new iAliveTT, iAliveCT, iDeadTT, iDeadCT, bool:bKicked
+	new iAliveTT, iAliveCT, iDeadTT, iDeadCT
 	rg_initialize_player_counts(iAliveTT, iAliveCT, iDeadTT, iDeadCT)
 	new iInGame = iAliveTT + iAliveCT + iDeadTT + iDeadCT
 
@@ -192,119 +89,20 @@ public task_Check() {
 	get_players(pPlayers, iPlCount)
 
 	if(iInGame > 1) {
-		bKicked = CheckAllAlivePlayersForAfk(pPlayers, iPlCount)
+		CheckAllAlivePlayersForAfk(pPlayers, iPlCount)
 	}
+}
 
-	if(bKicked || g_iMaxPlayers - iPlCount > g_eCvar[CVAR__FREE_SLOTS_TO_KICK_SPEC]) {
+CheckAllAlivePlayersForAfk(const pPlayers[MAX_PLAYERS], iPlCount) {
+	if(g_eCvar[CVAR_F_MAXSPEED] <= 2.0) {
 		return
 	}
 
-	CheckAllSpectatorsForAfk(pPlayers, iPlCount)
-}
-
-bool:CheckAllAlivePlayersForAfk(const pPlayers[MAX_PLAYERS], iPlCount) {
-	if(g_eCvar[CVAR_F__MAXSPEED] <= 2.0) {
-		return false
-	}
-
-	new bool:bKicked, Float:fGameTime = get_gametime()
+	new Float:fGameTime = get_gametime()
 
 	for(new i; i < iPlCount; i++) {
-		if(CheckPlayerForAfk(pPlayers[i], fGameTime)) {
-			bKicked = true
-		}
+		CheckPlayerForAfk(pPlayers[i], fGameTime)
 	}
-
-	return bKicked
-}
-
-CheckAllSpectatorsForAfk(const pPlayers[MAX_PLAYERS], iPlCount) {
-	new pPlayer, pPlayerToKick, Float:fAfkTime, Float:fMostTime = -1.0, Float:fGameTime = get_gametime()
-	new bitSpecFlags = read_flags(g_eCvar[CVAR__SPECTATOR_TIME_FLAG])
-	new iMaxSpecTime
-
-	for(new i; i < iPlCount; i++) {
-		pPlayer = pPlayers[i]
-
-		if(
-			CheckBit(g_bitPlToSkip, pPlayer)
-				||
-			is_user_bot(pPlayer)
-				||
-			is_user_hltv(pPlayer)
-				||
-			is_user_alive(pPlayer)
-				||
-			IsInGameEx(pPlayer)
-				||
-			IsPlayerJustConnected(pPlayer, fGameTime)
-		) {
-			continue
-		}
-		
-	#if defined ECD_HELPER_SUPPORT
-		if(ecd_is_scanning(pPlayer)) {
-			continue
-		}
-	#endif
-
-		iMaxSpecTime = g_eCvar[ (get_user_flags(pPlayer) & bitSpecFlags) ? CVAR__MAX_SPEC_TIME_FLAG : CVAR__MAX_SPEC_TIME_DEFAULT ];
-
-		if(!iMaxSpecTime) {
-			fAfkTime = fGameTime - g_fSpecStartTime[pPlayer]
-
-			if(fAfkTime > fMostTime) {
-				fMostTime = fAfkTime
-				pPlayerToKick = pPlayer
-			}
-		}
-		else {
-			new iAfkTime = floatround(fGameTime - Float:get_member(pPlayer, m_fLastMovement))
-
-			new iMenuID, iKeys
-			get_user_menu(pPlayer, iMenuID, iKeys)
-
-			if(iMenuID == g_iMenuID) {
-				if(iAfkTime >= g_eCvar[CVAR__MENU_TIME]) {
-					pPlayerToKick = pPlayer
-					break
-				}
-			}
-			else {
-				if(iAfkTime < iMaxSpecTime) {
-					continue
-				}
-
-				set_member(pPlayer, m_fLastMovement, get_gametime())
-
-				formatex( g_szMenu, charsmax(g_szMenu),
-					"%L", pPlayer, "AFK__ARE_YOU_THERE" );
-
-				show_menu(pPlayer, MENU_KEYS, g_szMenu, -1, MENU_IDENT_STRING)
-			}
-		}
-	}
-
-	if(pPlayerToKick) {
-		KickPlayer(pPlayerToKick, "AFK__SPEC_AFK")
-	}
-}
-
-public func_Menu_Handler(pPlayer, iKey) {
-	if(is_user_connected(pPlayer)) {
-		set_member(pPlayer, m_fLastMovement, get_gametime())
-	}
-
-	return PLUGIN_HANDLED
-}
-
-bool:IsPlayerJustConnected(pPlayer, Float:fGameTime) {
-	return (
-		//!IsInGame(pPlayer)
-		get_member(pPlayer, m_iTeam) == TEAM_UNASSIGNED
-			&&
-		fGameTime - g_fConnectTime[pPlayer] < g_eCvar[CVAR_F__TIME_SKIP_CHECK]
-	);
 }
 
 bool:CheckPlayerForAfk(pPlayer, Float:fGameTime) {
@@ -319,28 +117,19 @@ bool:CheckPlayerForAfk(pPlayer, Float:fGameTime) {
 
 	g_iTimerWarns[pPlayer]++
 
-	if(g_eCvar[CVAR__WARN_TO_WARN] && g_iTimerWarns[pPlayer] == min(g_eCvar[CVAR__WARN_TO_WARN], g_eCvar[CVAR__MAX_WARNS] - 1)) {
-		rg_send_audio(pPlayer, SOUND__TUTOR_MSG)
-		client_print(pPlayer, print_center, "%l", "AFK__WARN_CENTER")
-		client_print_color(pPlayer, print_team_red, "%l", "AFK__WARN_CHAT")
+	if(g_eCvar[CVAR_WARN_TO_WARN] && g_iTimerWarns[pPlayer] == min(g_eCvar[CVAR_WARN_TO_WARN], g_eCvar[CVAR_MAX_WARNS] - 1)) {
+		rg_send_audio(pPlayer, SOUND_TUTOR_MSG)
+		client_print(pPlayer, print_center, "%l", "AFK_WARN_CENTER")
+		client_print_color(pPlayer, print_team_red, "%l", "AFK_WARN_CHAT")
 		return false
 	}
 
-	if(g_iTimerWarns[pPlayer] >= g_eCvar[CVAR__MAX_WARNS]) {
-		return func_PunishForAFK(pPlayer)
+	if(g_iTimerWarns[pPlayer] >= g_eCvar[CVAR_MAX_WARNS]) {
+		func_PunishForAFK(pPlayer)
+		return false
 	}
 
 	return false
-}
-
-KickPlayer(pPlayer, const szLangKey[]) {
-	SetSkip(pPlayer)
-
-	if(g_eCvar[CVAR__NOTICE_KICK]) {
-		client_print_color(0, pPlayer, "%L", LANG_PLAYER, "AFK__KICK_AFK_ALL", pPlayer)
-	}
-
-	server_cmd("kick #%i ^"%L^"", get_user_userid(pPlayer), pPlayer, szLangKey)
 }
 
 bool:IsPlayerAfk(pPlayer, Float:fGameTime, bool:bWriteOldAngle) {
@@ -359,7 +148,7 @@ bool:IsPlayerAfk(pPlayer, Float:fGameTime, bool:bWriteOldAngle) {
 	return (
 		bSameAngle
 			&&
-		fGameTime - Float:get_member(pPlayer, m_fLastMovement) >= g_eCvar[CVAR_F__WARN_TIME]
+		fGameTime - Float:get_member(pPlayer, m_fLastMovement) >= g_eCvar[CVAR_F_WARN_TIME]
 			&&
 		Float:get_entvar(pPlayer, var_maxspeed) > 2.0
 	);
@@ -392,7 +181,7 @@ public task_GetOrigin(pPlayer) {
 }
 
 public CBasePlayer_Killed_Pre(pVictim, pKiller, iGibType) {
-	if(!g_eCvar[CVAR__MAX_KILLED_WARNS] || is_user_bot(pVictim) || !g_bOnGround[pVictim] || CheckBit(g_bitPlToSkip, pVictim)) {
+	if(!g_eCvar[CVAR_MAX_KILLED_WARNS] || is_user_bot(pVictim) || !g_bOnGround[pVictim] || CheckBit(g_bitPlToSkip, pVictim)) {
 		return
 	}
 
@@ -406,10 +195,10 @@ public CBasePlayer_Killed_Pre(pVictim, pKiller, iGibType) {
 			&&
 		IsIntCoordsNearlyEqual(iOrigin[2], g_iSpawnOrigin[pVictim][2])
 	) {
-		if(++g_iKilledWarns[pVictim] >= g_eCvar[CVAR__MAX_KILLED_WARNS]) {
-			remove_task(pVictim + TASKID__RESET_SKIP)
+		if(++g_iKilledWarns[pVictim] >= g_eCvar[CVAR_MAX_KILLED_WARNS]) {
+			remove_task(pVictim + TASKID_RESET_SKIP)
 			SetBit(g_bitPlToSkip, pVictim)
-			set_task(0.1, "task_DelayTransfer", TASKID__DELAY_TRANSFER + get_user_userid(pVictim))
+			set_task(0.1, "task_DelayTransfer", TASKID_DELAY_TRANSFER + get_user_userid(pVictim))
 		}
 
 		return
@@ -436,7 +225,7 @@ stock bool:IsIntCoordsNearlyEqual(iCoord1, iCoord2) {
 }
 
 public task_DelayTransfer(iUserId) {
-	new pPlayer = find_player("k", iUserId - TASKID__DELAY_TRANSFER)
+	new pPlayer = find_player("k", iUserId - TASKID_DELAY_TRANSFER)
 
 	if(pPlayer) {
 		ClearBit(g_bitPlToSkip, pPlayer)
@@ -445,27 +234,22 @@ public task_DelayTransfer(iUserId) {
 }
 
 SetSkip(pPlayer) {
-	remove_task(pPlayer + TASKID__RESET_SKIP)
+	remove_task(pPlayer + TASKID_RESET_SKIP)
 	SetBit(g_bitPlToSkip, pPlayer)
-	set_task(0.1, "ResetSkip", pPlayer + TASKID__RESET_SKIP)
+	set_task(0.1, "ResetSkip", pPlayer + TASKID_RESET_SKIP)
 }
 
 public ResetSkip(pPlayer) {
-	pPlayer -= TASKID__RESET_SKIP;
+	pPlayer -= TASKID_RESET_SKIP;
 	ClearBit(g_bitPlToSkip, pPlayer)
 }
 
 bool:func_PunishForAFK(pPlayer) {
-	if(get_user_flags(pPlayer) & read_flags(g_eCvar[CVAR__SPEC_TRANSFER_FLAG])) {
-		if(IsInGame(pPlayer)) {
-			func_MoveToSpec(pPlayer)
-		}
-
-		return false
+	if(IsInGame(pPlayer)) {
+		func_MoveToSpec(pPlayer)
 	}
 
-	KickPlayer(pPlayer, "AFK__KICK_AFK")
-	return true
+	return false
 }
 
 func_MoveToSpec(pPlayer) {
@@ -474,9 +258,7 @@ func_MoveToSpec(pPlayer) {
 
 	SetSkip(pPlayer)
 
-	if(g_eCvar[CVAR__NOTICE_SPEC]) {
-		client_print_color(0, pPlayer, "%L", LANG_PLAYER, "AFK__TRANSFER_TO_SPEC_INFO", pPlayer)
-	}
+	client_print_color(0, pPlayer, "%L", LANG_PLAYER, "AFK_TRANSFER_TO_SPEC_INFO", pPlayer)
 
 	if(is_user_alive(pPlayer)) {
 		new Float:fFrags = get_entvar(pPlayer, var_frags)
@@ -496,44 +278,4 @@ func_MoveToSpec(pPlayer) {
 	amxclient_cmd(pPlayer, "chooseteam")
 }
 
-public client_putinserver(pPlayer) {
-	g_fConnectTime[pPlayer] = g_fSpecStartTime[pPlayer] = get_gametime()
-}
-
-public CBasePlayer_StartObserver_Post(pPlayer) {
-	g_fSpecStartTime[pPlayer] = get_gametime()
-}
-
-public HandleMenu_ChooseTeam_Post(pPlayer, MenuChooseTeam:iMenuSlot) {
-	g_fSpecStartTime[pPlayer] = get_gametime()
-}
-
-stock bind_cvar_num(const cvar[], const value[], flags = FCVAR_NONE, const desc[] = "", bool:has_min = false, Float:min_val = 0.0, bool:has_max = false, Float:max_val = 0.0, &bind) {
-	bind_pcvar_num(create_cvar(cvar, value, flags, desc, has_min, min_val, has_max, max_val), bind)
-}
-
-stock bind_cvar_float(const cvar[], const value[], flags = FCVAR_NONE, const desc[] = "", bool:has_min = false, Float:min_val = 0.0, bool:has_max = false, Float:max_val = 0.0, &Float:bind) {
-	bind_pcvar_float(create_cvar(cvar, value, flags, desc, has_min, min_val, has_max, max_val), bind)
-}
-
-stock bind_cvar_string(const cvar[], const value[], flags = FCVAR_NONE, const desc[] = "", bool:has_min = false, Float:min_val = 0.0, bool:has_max = false, Float:max_val = 0.0, bind[], maxlen) {
-	bind_pcvar_string(create_cvar(cvar, value, flags, desc, has_min, min_val, has_max, max_val), bind, maxlen)
-}
-
-stock bind_cvar_num_by_name(const szCvarName[], &iBindVariable) {
-	bind_pcvar_num(get_cvar_pointer(szCvarName), iBindVariable)
-}
-
-stock bind_cvar_float_by_name(const szCvarName[], &Float:fBindVariable) {
-	bind_pcvar_float(get_cvar_pointer(szCvarName), fBindVariable)
-}
-
-stock bool:IsInGameEx(pPlayer) {
-	return (
-		(TEAM_SPECTATOR > get_member(pPlayer, m_iTeam) > TEAM_UNASSIGNED)
-			&&
-		get_member(pPlayer, m_iMenu) != Menu_ChooseAppearance
-			&&
-		get_member(pPlayer, m_iJoiningState) != PICKINGTEAM
-	);
-}
+public client_putinserver(pPlayer) {}
