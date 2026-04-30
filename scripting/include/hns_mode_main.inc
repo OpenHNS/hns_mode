@@ -6,15 +6,31 @@
 
 #define rg_get_user_team(%0) get_member(%0, m_iTeam)
 
+/**
+ * Game Modes.
+ */
 enum _:HNS_MODES {
 	MODE_PUBLIC = 0,
 	MODE_DEATHMATCH
 }
 
-native hns_get_prefix(prefix[], len);
-
+/**
+* Returns the game mode.
+*
+* @return		Mode status (HNS_MODES)
+*/
 native hns_get_mode();
+
+/**
+* Sets the game mode.
+*
+* @param iMode		Mode status (HNS_MODES)
+*
+* @noreturn
+*/
 native hns_set_mode(iCurrentMode);
+
+native hns_get_prefix(prefix[], len);
 
 forward hns_round_start();
 forward hns_team_swap();
